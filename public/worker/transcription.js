@@ -9,10 +9,9 @@ import {
 const MAX_NEW_TOKENS = 512;
 env.allowLocalModels = false;
 
-const whisperModelOptions = [
-  {
+const whisperModelOptions = {
+  whisper_base_f32: {
     label: 'Whisper Base f32 (Heavier)',
-    name: 'whisper_base_f32',
     model_id: 'onnx-community/whisper-base',
     params: {
       dtype: {
@@ -21,9 +20,8 @@ const whisperModelOptions = [
       },
     }
   },
-  {
+  whisper_base_q4: {
     label: 'Whisper Base q4 (Lighter)',
-    name: 'whisper_base_q4',
     model_id: 'onnx-community/whisper-base',
     params: {
       dtype: {
@@ -32,7 +30,7 @@ const whisperModelOptions = [
       },
     }
   }
-]
+}
 
 class AutomaticSpeechRecognitionPipeline {
   static model_id = null;
@@ -40,6 +38,7 @@ class AutomaticSpeechRecognitionPipeline {
   static processor = null;
   static model = null;
   static currentModel = null;
+  static defaultModel = whisperModelOptions.whisper_base_q4;
 
   static getInstance() {
     if (!this.tokenizer || !this.processor || !this.model) {
@@ -54,13 +53,11 @@ class AutomaticSpeechRecognitionPipeline {
       // skip loading
       return [this.tokenizer, this.processor, this.model];
     }
-
-    let selectedModelConfig = whisperModelOptions.find(opt => opt.name === modelName);
-    if (!selectedModelConfig) {
-      console.error(`Model configuration for slug "${modelSlugKey}" not found. Falling back to default.`);
-      selectedModelConfig = whisperModelOptions[0];
-      this.currentModel = selectedModelConfig.name;
+    let selectedModelConfig = this.defaultModel
+    if (modelName) {
+      selectedModelConfig = whisperModelOptions[modelName]
     }
+    this.currentModel = selectedModelConfig.name;
 
     const model_id = selectedModelConfig.model_id;
     console.log(`Loading resources for ${model_id} with params:`, selectedModelConfig.params);
@@ -134,7 +131,7 @@ async function generate({ audio, language = 'en'}) {
   }
 }
 
-async function load(modelName = null) {
+async function load({ modelName } = null) {
   self.postMessage({
     status: "loading"
   });
@@ -166,7 +163,7 @@ self.addEventListener("message", async (e) => {
 
   switch (type) {
     case "load":
-      await load(data.modelName);
+      await load({...data});
       break;
     case "generate":
       await generate({ ...data });
