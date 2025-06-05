@@ -85,7 +85,7 @@ export default function Page() {
                     className="text-3xl md:text-4xl font-bold text-gray-900 dark:text-gray-100 mb-2"
                     data-oid="jbld_w7"
                 >
-                    Meeting Transcription App
+                    Meeting Transcription and Stuff
                 </h1>
                 <p className="text-lg text-gray-600 dark:text-gray-400" data-oid="q14vrrn">
                     Record, transcribe, and enhance your meeting conversations
