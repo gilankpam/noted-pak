@@ -12,9 +12,9 @@ export const useSummarization = () => {
   const loadSummarizationModelPromiseRef = useRef(null);
 
   useEffect(() => {
-    summarizationWorkerRef.current = new Worker(new URL('../worker/summarization.js', import.meta.url, {
+    summarizationWorkerRef.current = new Worker(new URL('../public/worker/summarization.js', import.meta.url), {
       type: 'module'
-    }));
+    });
     summarizationWorkerRef.current.postMessage({ type: 'check_webgpu' });
 
     summarizationWorkerRef.current.onmessage = (event) => {

@@ -1,6 +1,7 @@
 // src/transcriptionService.js
 import LocalAgreementPolicy from '../lib/local-agreement-policy';
 
+let worker = null;
 let modelState = 'unloaded'; // 'unloaded', 'loading', 'ready', 'error'
 let localAgreementPolicy = new LocalAgreementPolicy();
 let currentAccumulatedTranscript = ""; // To store the running full hypothesis
@@ -9,7 +10,7 @@ let onLoadProgressCallback = null; // For App.js to receive loading progress
 
 const initializeWorker = () => {
   if (!worker) {
-    worker = new Worker(new URL('../worker/transcription.js', import.meta.url), {
+    worker = new Worker(new URL('../public/worker/transcription.js', import.meta.url), {
       type: 'module' 
     });
 

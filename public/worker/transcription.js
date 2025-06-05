@@ -62,8 +62,8 @@ class AutomaticSpeechRecognitionPipeline {
       this.currentModel = selectedModelConfig.name;
     }
 
-    model_id = selectedModelConfig.model_id;
-    console.log(`Loading resources for ${this.model_id} with params:`, selectedModelConfig.params);
+    const model_id = selectedModelConfig.model_id;
+    console.log(`Loading resources for ${model_id} with params:`, selectedModelConfig.params);
 
     // Ensure components are loaded sequentially or awaited properly
     this.tokenizer = await AutoTokenizer.from_pretrained(model_id, {
@@ -73,7 +73,7 @@ class AutomaticSpeechRecognitionPipeline {
       progress_callback,
     });
     this.model = await WhisperForConditionalGeneration.from_pretrained(
-      this.model_id,
+      model_id,
       {
         ...selectedModelConfig.params,
         device: "webgpu",
@@ -162,11 +162,11 @@ async function load(modelName = null) {
 }
 
 self.addEventListener("message", async (e) => {
-  const { type, data, modelName } = e.data; // Changed modelName to modelSlug
+  const { type, data } = e.data; // Changed modelName to modelSlug
 
   switch (type) {
     case "load":
-      await load(modelName);
+      await load(data.modelName);
       break;
     case "generate":
       await generate({ ...data });
