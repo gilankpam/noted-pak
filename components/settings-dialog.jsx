@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Settings } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
@@ -25,38 +25,120 @@ import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 
 export function SettingsDialog() {
     const [open, setOpen] = useState(false);
-    const [settings, setSettings] = useState({
+    const [isWebGPUSupported, setIsWebGPUSupported] = useState(null);
+    const [isWebGPUCheckComplete, setIsWebGPUCheckComplete] = useState(false);
+    const [webGPUCheckMessage, setWebGPUCheckMessage] = useState('');
+
+    // Define whisperModels based on whisperModelOptions from transcription.worker.js
+    // Using 'modelSlug' as the value for selection.
+    const whisperModels = [
+        { value: 'whisper_base_f32', label: 'Whisper Base f32 (Heavier)' },
+        { value: 'whisper_base_q4', label: 'Whisper Base q4 (Lighter)' },
+    ];
+
+    const initialSettings = {
         stt: {
-            whisperModel: 'whisper-1',
+            whisperModel: whisperModels[0].value, // Default to the first model's slug
         },
         llm: {
             type: 'local',
-            localModel: 'llama-3.1-8b',
+            localModel: 'qwen3-0.6b',
             openai: {
                 apiToken: '',
                 baseUrl: 'https://api.openai.com/v1',
                 modelName: 'gpt-4',
             },
         },
-    });
+    };
+    const [settings, setSettings] = useState(initialSettings);
 
-    const whisperModels = [
-        { value: 'whisper-1', label: 'Whisper v1' },
-        { value: 'whisper-large-v2', label: 'Whisper Large v2' },
-        { value: 'whisper-large-v3', label: 'Whisper Large v3' },
-        { value: 'whisper-medium', label: 'Whisper Medium' },
-        { value: 'whisper-small', label: 'Whisper Small' },
-        { value: 'whisper-base', label: 'Whisper Base' },
-        { value: 'whisper-tiny', label: 'Whisper Tiny' },
-    ];
+    // Memoize initialSettings to prevent unnecessary re-runs of useEffect if its identity changes.
+    const memoizedInitialSettings = useCallback(() => initialSettings, []);
+
+
+    useEffect(() => {
+        let active = true; // To prevent state updates on unmounted component
+
+        const checkWebGPUAndLoadSettings = async () => {
+            if (!active) return;
+            setIsWebGPUCheckComplete(false); // Reset check status on open
+
+            // 1. Check WebGPU
+            let gpuSupported = false;
+            let gpuMessage = '';
+            if (typeof navigator !== 'undefined' && navigator.gpu) {
+                try {
+                    const adapter = await navigator.gpu.requestAdapter();
+                    if (adapter) {
+                        gpuSupported = true;
+                        gpuMessage = 'WebGPU is supported.';
+                    } else {
+                        gpuMessage = 'WebGPU is available but no adapter found. Local model disabled.';
+                    }
+                } catch (e) {
+                    gpuMessage = `WebGPU not supported: ${e.message || 'Unknown error'}. Local model disabled.`;
+                }
+            } else {
+                gpuMessage = 'WebGPU is not supported by this browser. Local model disabled.';
+            }
+
+            if (active) {
+                setIsWebGPUSupported(gpuSupported);
+                setWebGPUCheckMessage(gpuMessage);
+                setIsWebGPUCheckComplete(true);
+            }
+
+            // 2. Load settings from localStorage
+            const storedSettings = localStorage.getItem('notedPakSettings');
+            // Use a deep copy of initialSettings to avoid direct mutation if it were an object passed around.
+            let currentSettings = JSON.parse(JSON.stringify(memoizedInitialSettings()));
+
+
+            if (storedSettings) {
+                try {
+                    const parsedSettings = JSON.parse(storedSettings);
+                    // Basic validation
+                    if (parsedSettings.stt && parsedSettings.llm && parsedSettings.llm.openai) {
+                        currentSettings = parsedSettings;
+                    } else {
+                        // Invalid structure, currentSettings remains initialSettings, will save them later
+                        console.warn('Stored settings have unexpected structure, using defaults.');
+                        localStorage.setItem('notedPakSettings', JSON.stringify(currentSettings)); // Save valid initial settings
+                    }
+                } catch (error) {
+                    console.error('Failed to parse settings from localStorage, using defaults:', error);
+                    // Parsing failed, currentSettings remains initialSettings, will save them later
+                    localStorage.setItem('notedPakSettings', JSON.stringify(currentSettings)); // Save valid initial settings
+                }
+            } else {
+                // No settings in localStorage, save the initial settings
+                localStorage.setItem('notedPakSettings', JSON.stringify(currentSettings));
+            }
+            
+            // 3. Adjust settings if WebGPU is not supported and current is 'local'
+            if (!gpuSupported && currentSettings.llm.type === 'local') {
+                currentSettings.llm.type = 'openai'; // Default to OpenAI if local is chosen but not supported
+            }
+            
+            if (active) {
+                setSettings(currentSettings);
+            }
+        };
+
+        if (open) {
+            checkWebGPUAndLoadSettings();
+        }
+
+        return () => {
+            active = false;
+        };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [open, memoizedInitialSettings]); // memoizedInitialSettings is stable
+
+    // const whisperModels array is now defined above initialSettings
 
     const localModels = [
-        { value: 'llama-3.1-8b', label: 'Llama 3.1 8B' },
-        { value: 'llama-3.1-70b', label: 'Llama 3.1 70B' },
-        { value: 'llama-3.2-3b', label: 'Llama 3.2 3B' },
-        { value: 'mistral-7b', label: 'Mistral 7B' },
-        { value: 'codellama-7b', label: 'CodeLlama 7B' },
-        { value: 'phi-3-mini', label: 'Phi-3 Mini' },
+        { value: 'qwen3-0.6b', label: 'Qwen3 0.6B' },
     ];
 
     const updateSTTSettings = (field, value) => {
@@ -93,13 +175,25 @@ export function SettingsDialog() {
     };
 
     const handleSave = () => {
-        // Here you would typically save the settings to localStorage, a database, or send to an API
+        localStorage.setItem('notedPakSettings', JSON.stringify(settings));
         console.log('Saving settings:', settings);
         // You could also show a toast notification here
         setOpen(false);
     };
 
     const handleCancel = () => {
+        // Optionally, revert to saved settings if user cancels without saving
+        const storedSettings = localStorage.getItem('notedPakSettings');
+        if (storedSettings) {
+            try {
+                const parsedSettings = JSON.parse(storedSettings);
+                if (parsedSettings.stt && parsedSettings.llm) {
+                    setSettings(parsedSettings);
+                }
+            } catch (error) {
+                console.error('Failed to parse settings from localStorage on cancel:', error);
+            }
+        }
         setOpen(false);
     };
 
@@ -157,11 +251,25 @@ export function SettingsDialog() {
                                 className="flex flex-col space-y-3"
                             >
                                 <div className="flex items-center space-x-2">
-                                    <RadioGroupItem value="local" id="local" />
-                                    <Label htmlFor="local">Local Model</Label>
+                                    <RadioGroupItem
+                                        value="local"
+                                        id="local"
+                                        disabled={!isWebGPUSupported && isWebGPUCheckComplete}
+                                    />
+                                    <Label
+                                        htmlFor="local"
+                                        className={(!isWebGPUSupported && isWebGPUCheckComplete) ? 'text-muted-foreground' : ''}
+                                    >
+                                        Local Model
+                                    </Label>
                                 </div>
+                                {isWebGPUCheckComplete && !isWebGPUSupported && (
+                                    <p className="ml-6 text-sm text-destructive">
+                                        {webGPUCheckMessage || 'Local model disabled due to WebGPU unavailability.'}
+                                    </p>
+                                )}
 
-                                {settings.llm.type === 'local' && (
+                                {settings.llm.type === 'local' && isWebGPUSupported && isWebGPUCheckComplete && (
                                     <div className="ml-6 space-y-2">
                                         <Label htmlFor="local-model">Select Local Model</Label>
                                         <Select
@@ -169,6 +277,7 @@ export function SettingsDialog() {
                                             onValueChange={(value) =>
                                                 updateLLMSettings('localModel', value)
                                             }
+                                            disabled={!isWebGPUSupported} // Double ensure disabled
                                         >
                                             <SelectTrigger id="local-model">
                                                 <SelectValue placeholder="Select a local model" />
@@ -186,6 +295,15 @@ export function SettingsDialog() {
                                         </Select>
                                     </div>
                                 )}
+                                 {/* Show this section if local is selected but WebGPU is not supported, to inform user */}
+                                {settings.llm.type === 'local' && !isWebGPUSupported && isWebGPUCheckComplete && (
+                                     <div className="ml-6 space-y-2">
+                                        <p className="text-sm text-muted-foreground">
+                                            Local model selection is unavailable.
+                                        </p>
+                                    </div>
+                                )}
+
 
                                 <div className="flex items-center space-x-2">
                                     <RadioGroupItem value="openai" id="openai" />

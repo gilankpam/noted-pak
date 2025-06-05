@@ -16,6 +16,7 @@
     "@radix-ui/react-select": "^2.2.5",
     "@radix-ui/react-slot": "^1.1.0",
     "@radix-ui/react-tabs": "^1.1.12",
+    "@ricky0123/vad-web": "^0.0.24",
     "autoprefixer": "^10.4.21",
     "class-variance-authority": "^0.7.0",
     "clsx": "^2.1.1",
@@ -23,6 +24,7 @@
     "next": "15.3.3",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
+    "react-markdown": "^10.1.0",
     "tailwind-merge": "^2.5.2",
     "tailwindcss-animate": "^1.0.7"
   },

@@ -5,7 +5,7 @@ import {
   processAudioChunk,
   isModelLoaded,
   disposeModel
-} from './transcriptionService';
+} from '../service/transcription';
 
 export const useTranscription = () => {
   const [isTranscribing, setIsTranscribing] = useState(false);

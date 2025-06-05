@@ -4,6 +4,7 @@ import {
   AutoModelForCausalLM,
   TextStreamer,
   InterruptableStoppingCriteria,
+  env
 } from "@huggingface/transformers";
 
 env.allowLocalModels = false;
@@ -17,7 +18,6 @@ async function checkWebGPU() {
     if (!adapter) {
       throw new Error("WebGPU is not supported (no adapter found)");
     }
-    // fp16_supported = adapter.features.has("shader-f16") // Example: check for specific features
     self.postMessage({
       status: "webgpu_check_success",
       data: "WebGPU is available.",
