@@ -144,13 +144,8 @@ export const isModelLoaded = () => {
   return modelState === 'ready';
 };
 
-export const disposeModel = async () => {
-  if (worker) {
-    worker.terminate();
-    worker = null;
-    modelState = 'unloaded';
-    console.log('Transcription worker terminated.');
-  }
-  onUpdateCallback = null;
-  onLoadProgressCallback = null;
+export const disposeModel = () => {
+  worker.postMessage({
+     type: 'unload'
+  });
 };

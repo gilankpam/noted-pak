@@ -49,8 +49,7 @@ class AutomaticSpeechRecognitionPipeline {
   }
 
   static async loadModel(progress_callback, modelName) {
-    if (modelName === this.currentModel) {
-      // skip loading
+    if (this.model && this.tokenizer && this.processor && modelName === this.currentModel) {
       return [this.tokenizer, this.processor, this.model];
     }
     let selectedModelConfig = this.defaultModel
@@ -80,6 +79,13 @@ class AutomaticSpeechRecognitionPipeline {
     console.log("Model loaded successfully:", model_id);
     this.currentModel = modelName;
     return [this.tokenizer, this.processor, this.model];
+  }
+
+  static async unloadModel() {
+    this.tokenizer = null;
+    this.processor = null;
+    await this.model.dispose();
+    this.model = null;
   }
 }
 
@@ -158,12 +164,19 @@ async function load({ modelName } = null) {
   }
 }
 
+async function unload() {
+  await AutomaticSpeechRecognitionPipeline.unloadModel();
+}
+
 self.addEventListener("message", async (e) => {
   const { type, data } = e.data; // Changed modelName to modelSlug
 
   switch (type) {
     case "load":
       await load({...data});
+      break;
+    case "unload":
+      await unload();
       break;
     case "generate":
       await generate({ ...data });

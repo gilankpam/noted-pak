@@ -347,6 +347,7 @@ export const useTranscription = () => {
     isProcessingAudioRef.current = false;
     setIsMicMuted(true);
     setIsPaused(false); // Ensure not paused when stopping
+    disposeModel();
     console.log('Transcription stopped. Resources cleaned up.');
   }, [setIsTranscribing, setIsMicMuted, setIsPaused]);
 
@@ -535,18 +536,6 @@ export const useTranscription = () => {
     console.log(`Calling setupVAD with newMutedState: ${newMutedState}`);
     await setupVAD(newMutedState);
   }, [isMicMuted, setupVAD, setIsMicMuted]);
-
-  // Cleanup effect for the hook
-  useEffect(() => {
-    return () => {
-      console.log('useTranscription hook unmounting. Cleaning up transcription resources...');
-      if (isTranscribingRef.current) { // Use ref for current state on unmount
-        handleStopTranscription();
-      }
-      disposeModel().catch(err => console.error("Error disposing transcription model on unmount:", err));
-    };
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [handleStopTranscription]); // Ensure handleStopTranscription is stable or correctly listed
 
   return {
     isTranscribing,
