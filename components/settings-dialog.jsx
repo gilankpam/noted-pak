@@ -157,7 +157,10 @@ export function SettingsDialog() {
 
   // const whisperModels array is now defined above initialSettings
 
-  const localModels = [{ value: "qwen3-0.6b", label: "Qwen3 0.6B" }];
+  const localModels = [
+    { value: "qwen3-0.6b", label: "Qwen3 0.6B" },
+    { value: "smollm2-1.7b", label: "SmolLM2 1.7B" }
+  ];
 
   const updateSTTSettings = (field, value) => {
     setSettings((prev) => ({

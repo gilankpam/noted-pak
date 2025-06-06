@@ -28,7 +28,7 @@ export default function Page() {
     summarizationModelReady,
     summarizationModelLoadingProgress,
     summarizationState,
-    isLoadingSummarizationModelRef,
+    isLoadingSummarizationModel,
     handleStartSummarization,
     interruptSummarization,
   } = useSummarization();
@@ -60,7 +60,7 @@ export default function Page() {
     if (
       !editableTranscription.trim() ||
       isSummarizing ||
-      isLoadingSummarizationModelRef.current
+      isLoadingSummarizationModel
     )
       return;
     await handleStartSummarization(editableTranscription, meetingTitle);
@@ -331,12 +331,12 @@ export default function Page() {
                 disabled={
                   !editableTranscription.trim() ||
                   isTranscribing ||
-                  (!isSummarizing && isLoadingSummarizationModelRef.current) // Disable if model is loading and not already summarizing
+                  (!isSummarizing && isLoadingSummarizationModel) // Disable if model is loading and not already summarizing
                 }
                 className={`px-4 py-2 text-white rounded-lg font-medium transition-colors duration-200 ${
                   isSummarizing
                     ? "bg-red-600 hover:bg-red-700" // "Cancel" style
-                    : isLoadingSummarizationModelRef.current
+                    : isLoadingSummarizationModel
                       ? "bg-gray-400 cursor-not-allowed" // Disabled/loading model style
                       : "bg-blue-600 hover:bg-blue-700" // "Enhance" style
                 } disabled:bg-gray-400`}
@@ -344,7 +344,7 @@ export default function Page() {
               >
                 {isSummarizing
                   ? "Cancel Summarization"
-                  : isLoadingSummarizationModelRef.current
+                  : isLoadingSummarizationModel
                     ? "Loading Model..."
                     : "Enhance Transcription"}
               </button>
@@ -440,9 +440,7 @@ export default function Page() {
               className="h-full min-h-[400px] bg-white dark:bg-gray-800 rounded-lg p-4 border border-gray-200 dark:border-gray-700 overflow-y-auto flex flex-col"
               data-oid="woi4jxo"
             >
-              {(isLoadingSummarizationModelRef.current &&
-                !summarizationModelReady &&
-                !isSummarizing) ||
+              {(isLoadingSummarizationModel && !isSummarizing) ||
               (isSummarizing && summarizationState === "thinking") ? (
                 // Centered spinner for initial model loading or "thinking" state
                 <div
@@ -459,9 +457,8 @@ export default function Page() {
                       data-oid="q_u.x6v"
                     >
                       {isSummarizing && summarizationState === "thinking"
-                        ? "Thinking..."
-                        : summarizationModelLoadingProgress ||
-                          "Loading summarization model..."}
+                        ? "Thinking..." : "Loading summarization model..."
+                      }
                     </p>
                     {isSummarizing && summarizationState === "thinking" && (
                       <p
@@ -486,7 +483,7 @@ export default function Page() {
                       </ReactMarkdown>
                     ) : (
                       !isSummarizing &&
-                      !isLoadingSummarizationModelRef.current && (
+                      !isLoadingSummarizationModel && (
                         <div
                           className="flex items-center justify-center h-full"
                           data-oid="oh9ex4t"
@@ -497,7 +494,7 @@ export default function Page() {
                           >
                             {summarizationModelLoadingProgress &&
                             !summarizationModelReady &&
-                            !isLoadingSummarizationModelRef.current
+                            !isLoadingSummarizationModel
                               ? summarizationModelLoadingProgress // Show error if loading failed
                               : "Enhanced transcription will appear here after processing."}
                             <br data-oid="d_115nd" />

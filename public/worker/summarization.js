@@ -8,6 +8,12 @@ import {
 } from "@huggingface/transformers";
 
 env.allowLocalModels = false;
+const llmOptions = {
+    'qwen3-0.6b': { model_id: "onnx-community/Qwen3-0.6B-ONNX" },
+    'smollm2-1.7b': { model_id: "HuggingFaceTB/SmolLM2-1.7B-Instruct"}
+};
+const stopping_criteria = new InterruptableStoppingCriteria();
+let past_key_values_cache = null;
 
 async function checkWebGPU() {
   try {
@@ -58,11 +64,11 @@ Here is the transcript:
  * This class uses the Singleton pattern to enable lazy-loading of the pipeline
  */
 class SummarizationPipeline {
-  static model_id = "onnx-community/Qwen3-0.6B-ONNX"; // Using the example model
   static tokenizer = null;
   static model = null;
+  static currentModelId = '';
 
-  static async getInstance(progress_callback = null) {
+  static async getInstance(progress_callback = null, model_id) {
     // Check for WebGPU availability before attempting to load the local model
     if (typeof navigator !== 'undefined' && navigator.gpu) {
       try {
@@ -84,32 +90,38 @@ class SummarizationPipeline {
     }
 
     // Proceed with loading tokenizer and model if WebGPU check passed
-    if (!this.tokenizer) {
-      this.tokenizer = AutoTokenizer.from_pretrained(this.model_id, {
+    if (!this.tokenizer || this.currentModelId !== model_id) {
+      this.tokenizer = await AutoTokenizer.from_pretrained(model_id, {
         progress_callback,
       });
     }
 
+    if (this.model && this.currentModelId !== model_id) {
+      await this.model.dispose();
+      this.model = null;
+    }
+
     if (!this.model) {
-      this.model = AutoModelForCausalLM.from_pretrained(this.model_id, {
+      this.model = await AutoModelForCausalLM.from_pretrained(model_id, {
         dtype: "q4f16", // Using quantization for better performance
         device: "webgpu", // This will now only be attempted if WebGPU is available
         progress_callback,
       });
+
+      await this.model.generate({ ...this.tokenizer("x"), max_new_tokens: 1 }); // Compile shaders
+      past_key_values_cache = null;
     }
 
+    this.currentModelId = model_id;
+
     // Wait for both promises to resolve
-    [this.tokenizer, this.model] = await Promise.all([this.tokenizer, this.model]);
     return [this.tokenizer, this.model];
   }
 }
 
-const stopping_criteria = new InterruptableStoppingCriteria();
-let past_key_values_cache = null;
-
 // Function to generate summary using OpenAI API
 async function generateSummaryOpenAI({ transcriptionText, meetingTitle, settings }) {
-  self.postMessage({ status: "summarizing_started", data: { reasonEnabled: false } }); // OpenAI doesn't have a "thinking" phase in the same way
+  self.postMessage({ status: "summarizing_started" }); // OpenAI doesn't have a "thinking" phase in the same way
 
   const { apiToken, baseUrl, modelName } = settings.llm.openai;
 
@@ -183,8 +195,6 @@ async function generateSummaryOpenAI({ transcriptionText, meetingTitle, settings
               self.postMessage({
                 status: "update",
                 output: content, // Send delta content for streaming update
-                tps: null, // TPS not applicable/calculated for OpenAI in this setup
-                numTokens: null, // Token count not easily available per chunk
                 state: "answering", // OpenAI is always in "answering" state from user's perspective
               });
             }
@@ -212,25 +222,13 @@ async function generateSummaryOpenAI({ transcriptionText, meetingTitle, settings
   }
 }
 
-
-// reasonEnabled parameter is removed, thinking mode is now default for local model
-async function generateSummary({ transcriptionText, meetingTitle, settings }) { // Added settings
-  if (settings && settings.llm && settings.llm.type === 'openai') {
-    await generateSummaryOpenAI({ transcriptionText, meetingTitle, settings });
-    return;
-  } else {
-    await generateSummaryLocal({ transcriptionText, meetingTitle, settings })
-  }
-}
-
-async function generateSummaryLocal({ transcriptionText, meetingTitle }) {
-  // Fallback to local model if settings are not for OpenAI
-  self.postMessage({ status: "summarizing_started", data: { reasonEnabled: true } }); // Always indicate reasonEnabled is true for local
-
+async function generateSummaryLocalQwen({ transcriptionText, meetingTitle }) {
   try {
+    const model_id = llmOptions['qwen3-0.6b'].model_id;
+
     const [tokenizer, model] = await SummarizationPipeline.getInstance((progress) => {
       self.postMessage(progress); // Forward progress events
-    });
+    }, model_id);
 
     const messages = [
       { role: "system", content: systemPrompt },
@@ -290,49 +288,25 @@ async function generateSummaryLocal({ transcriptionText, meetingTitle }) {
       past_key_values: past_key_values_cache,
       do_sample: false,
       top_k: 20, // Always use thinking mode parameters
-      temperature: 0.6, // Always use thinking mode parameters
-      max_new_tokens: 4092, // Always use thinking mode parameters
+      temperature: 0.7, // Always use thinking mode parameters
+      max_new_tokens: 16384, // Always use thinking mode parameters
       streamer,
       stopping_criteria,
       return_dict_in_generate: true,
     };
     
-    // For some models, token_type_ids might not be needed or might cause issues if not handled correctly.
-    // If the model is not a BERT-style model, it's often safer to omit token_type_ids.
-    if (inputs.token_type_ids === undefined) {
-        delete generationConfig.token_type_ids;
-    }
-
+    self.postMessage({ status: "summarizing_started" });
+    self.postMessage({
+      status: "update",
+      output: "",
+      state: 'thinking'
+    });
 
     const { past_key_values, sequences } = await model.generate(generationConfig);
     past_key_values_cache = past_key_values;
 
-    const decodedSequences = tokenizer.batch_decode(sequences, {
-      skip_special_tokens: true, // This primarily removes tokenizer-defined special tokens like <s>, </s>
-    });
-    
-    let fullGeneratedText = decodedSequences[0]; // This text includes the prompt if not skipped by batch_decode
-    let cleanedFinalOutput;
-
-    // Always apply thinking mode cleaning logic
-    // `inputs.input_ids` contains the tokenized version of the full chat prompt + assistant generation hint
-    // Decode these input_ids to get the exact prompt text that was fed to the model.
-    const promptTextFromInputIds = tokenizer.decode(inputs.input_ids, { skip_special_tokens: true });
-
-    if (fullGeneratedText.startsWith(promptTextFromInputIds)) {
-        cleanedFinalOutput = fullGeneratedText.substring(promptTextFromInputIds.length);
-    } else {
-        // Fallback
-        cleanedFinalOutput = fullGeneratedText;
-        console.warn("Summarization worker: Prompt (from input_ids) not found at the start of batch_decode output. The final summary might contain parts of the prompt.");
-    }
-    
-    // Remove <think>...</think> blocks from the assistant's actual response part.
-    cleanedFinalOutput = cleanedFinalOutput.replace(/<think>.*?<\/think>/gs, "").trim();
-
     self.postMessage({
-      status: "summarizing_complete",
-      output: cleanedFinalOutput,
+      status: "summarizing_complete"
     });
 
   } catch (e) {
@@ -344,33 +318,90 @@ async function generateSummaryLocal({ transcriptionText, meetingTitle }) {
   }
 }
 
-async function loadModel() {
-  self.postMessage({
-    status: "loading",
-    data: "Loading summarization model...",
-  });
-
+async function generateSummaryLocalSmollm2({ transcriptionText, meetingTitle }) {
   try {
-    const [tokenizer, model] = await SummarizationPipeline.getInstance((x) => {
-      self.postMessage(x);
+    const model_id = llmOptions['smollm2-1.7b'].model_id;
+    const [tokenizer, model] = await SummarizationPipeline.getInstance((progress) => {
+      self.postMessage(progress); // Forward progress events
+    }, model_id);
+
+    const messages = [
+      { role: "system", content: systemPrompt },
+      { role: "user", content: getUserMessage(meetingTitle, transcriptionText) }
+    ];
+
+    const inputs = tokenizer.apply_chat_template(messages, {
+      add_generation_prompt: true,
+      return_dict: true,
     });
+
+    // Inform the UI
+    self.postMessage({
+      status: "update",
+      output: "",
+      state: 'thinking'
+    });
+
+    const callback_function = (output) => {
+      self.postMessage({
+        status: "update",
+        output,
+        state: 'answering'
+      });
+    };
+
+    const streamer = new TextStreamer(tokenizer, {
+      skip_prompt: true,
+      skip_special_tokens: true,
+      callback_function,
+      token_callback_function: () => {},
+    });
+
+    const generationConfig = {
+      ...inputs,
+      past_key_values: past_key_values_cache,
+      do_sample: false,
+      max_new_tokens: 4092,
+      streamer,
+      stopping_criteria,
+      return_dict_in_generate: true,
+    };
+
+    self.postMessage({ status: "summarizing_started" });
+    
+    const { past_key_values, sequences } = await model.generate(generationConfig);
+    past_key_values_cache = past_key_values;
 
     self.postMessage({
-      status: "loading",
-      data: "Compiling shaders and warming up summarization model...",
+      status: "summarizing_complete"
     });
-
-    // Run model with dummy input to compile shaders
-    const dummyPrompt = "This is a test.";
-    const inputs = tokenizer(dummyPrompt);
-    await model.generate({ ...inputs, max_new_tokens: 1 });
-    self.postMessage({ status: "summarization_ready" });
   } catch (e) {
     self.postMessage({
       status: "error",
-      type: "load_model_error",
+      type: "summarization_error",
       data: e.toString(),
     });
+  }
+}
+
+async function generateSummary({ transcriptionText, meetingTitle, settings }) { // Added settings
+  if (settings && settings.llm && settings.llm.type === 'openai') {
+    await generateSummaryOpenAI({ transcriptionText, meetingTitle, settings });
+    return;
+  }
+
+  if (settings && settings.llm && settings.llm.type === 'local') {
+    switch (settings.llm.localModel) {
+      case 'qwen3-0.6b':
+        await generateSummaryLocalQwen({ transcriptionText, meetingTitle });
+        break;
+      case 'smollm2-1.7b':
+      default:
+        await generateSummaryLocalSmollm2({ transcriptionText, meetingTitle });
+        break;
+    }
+  } else {
+    await generateSummaryLocalSmollm2({ transcriptionText, meetingTitle });
   }
 }
 
@@ -381,10 +412,6 @@ self.addEventListener("message", async (e) => {
   switch (type) {
     case "check_webgpu":
       checkWebGPU();
-      break;
-
-    case "load_model":
-      loadModel();
       break;
 
     case "summarize":
