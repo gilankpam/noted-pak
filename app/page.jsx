@@ -9,8 +9,7 @@ import { useSummarization } from "@/hook/summarization";
 export default function Page() {
   const {
     isTranscribing,
-    confirmedText,
-    unconfirmedTextPreview,
+    transcription,
     modelReady,
     isMicMuted,
     isPaused: isTranscriptionPaused,
@@ -37,10 +36,6 @@ export default function Page() {
   const [meetingTitle, setMeetingTitle] = useState("");
   const [editableTranscription, setEditableTranscription] = useState("");
   const [copySuccess, setCopySuccess] = useState(false);
-
-  const currentTranscription =
-    confirmedText +
-    (unconfirmedTextPreview ? ` ${unconfirmedTextPreview}` : "");
 
   const handleStartRecording = async () => {
     await handleStartTranscription();
@@ -78,8 +73,8 @@ export default function Page() {
   }, [modelLoadingProgress]);
 
   useEffect(() => {
-    setEditableTranscription(currentTranscription);
-  }, [currentTranscription]);
+    setEditableTranscription(transcription);
+  }, [transcription]);
 
   const handleCopyMarkdown = async () => {
     if (!summaryText) return;

@@ -9,8 +9,7 @@ import {
 
 export const useTranscription = () => {
   const [isTranscribing, setIsTranscribing] = useState(false);
-  const [confirmedText, setConfirmedText] = useState('');
-  const [unconfirmedTextPreview, setUnconfirmedTextPreview] = useState('');
+  const [transcription, setTranscription] = useState('');
   const [modelReady, setModelReady] = useState(false);
   const [modelLoadingProgress, setModelLoadingProgress] = useState(''); // New state for loading progress
   const [isMicMuted, setIsMicMuted] = useState(true);
@@ -120,11 +119,8 @@ export const useTranscription = () => {
         case 'start':
           break;
         case 'update':
-          if (update.fullConfirmedText !== undefined) {
-            setConfirmedText(update.fullConfirmedText);
-          }
-          if (update.unconfirmedText !== undefined) {
-            setUnconfirmedTextPreview(update.unconfirmedText);
+          if (update.text !== undefined) {
+            setTranscription(prevTranscription => prevTranscription + (prevTranscription ? " " : "") + update.text);
           }
           break;
         case 'complete':
@@ -418,8 +414,7 @@ export const useTranscription = () => {
       
       console.log('Screen share audio stream acquired.');
       setIsTranscribing(true); // Critical: set this before VAD setup that might use isTranscribingRef
-      setConfirmedText('');
-      setUnconfirmedTextPreview('');
+      setTranscription('');
       setIsMicMuted(true);
       setIsPaused(false); 
 
@@ -461,7 +456,7 @@ export const useTranscription = () => {
     } finally {
       setIsStarting(false);
     }
-  }, [modelReady, handleLoadModel, setupVAD, handleStopTranscription, setIsTranscribing, setConfirmedText, setUnconfirmedTextPreview, setIsMicMuted, setIsPaused]);
+  }, [modelReady, handleLoadModel, setupVAD, handleStopTranscription, setIsTranscribing, setTranscription, setIsMicMuted, setIsPaused]);
 
   const handlePauseTranscription = useCallback(() => {
     if (!isTranscribingRef.current || isPausedRef.current) {
@@ -555,8 +550,7 @@ export const useTranscription = () => {
 
   return {
     isTranscribing,
-    confirmedText,
-    unconfirmedTextPreview,
+    transcription,
     modelReady,
     isMicMuted,
     isPaused, // Expose new state

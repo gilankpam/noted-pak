@@ -1,17 +1,14 @@
 // src/transcriptionService.js
-import LocalAgreementPolicy from '../lib/local-agreement-policy';
 
 let worker = null;
 let modelState = 'unloaded'; // 'unloaded', 'loading', 'ready', 'error'
-let localAgreementPolicy = new LocalAgreementPolicy();
-let currentAccumulatedTranscript = ""; // To store the running full hypothesis
 let onUpdateCallback = null; // For App.js to receive transcription updates
 let onLoadProgressCallback = null; // For App.js to receive loading progress
 
 const initializeWorker = () => {
   if (!worker) {
     worker = new Worker(new URL('../public/worker/transcription.js', import.meta.url), {
-      type: 'module' 
+      type: 'module'
     });
 
     worker.onmessage = (event) => {
@@ -32,21 +29,14 @@ const initializeWorker = () => {
         case 'update': // Live transcription update
           if (onUpdateCallback && typeof output === 'string') { // Ensure output is a string
             // Worker sends incremental chunks (e.g., words). Accumulate them.
-            if (output.trim() !== "") { // Avoid adding empty strings or just spaces
-                currentAccumulatedTranscript += (currentAccumulatedTranscript ? " " : "") + output.trim();
+            if (output.trim() === "") { // Avoid adding empty strings or just spaces
+                return;
             }
 
-            const newlyConfirmed = localAgreementPolicy.process(currentAccumulatedTranscript);
-            const unconfirmedPart = localAgreementPolicy.getUnconfirmedPart();
-            const fullEmitted = localAgreementPolicy.getEmittedText(); // Get the full confirmed text
-
-            // Send both newly confirmed, unconfirmed, and the full confirmed text
-            // App.js can decide how to display this (e.g., append newlyConfirmed, show unconfirmed differently)
+            // Send the full accumulated transcript
             onUpdateCallback({
               type: 'update',
-              newlyConfirmedText: newlyConfirmed,
-              unconfirmedText: unconfirmedPart,
-              fullConfirmedText: fullEmitted, // Send the entire confirmed transcript
+              text: output.trim(),
             });
           }
           break;
@@ -106,20 +96,15 @@ export const loadModel = async (progressCb, modelName = null) => { // Changed mo
     }
     if (modelState === 'loading') {
       if (onLoadProgressCallback) onLoadProgressCallback({ status: 'Model loading is already in progress.' });
-      return false; 
+      return false;
     }
     modelState = 'loading';
     worker.postMessage({ type: 'load' }); // Load default model
   }
 
-  // loadModel now doesn't directly return success/failure based on loading,
-  // as that's handled asynchronously via worker messages and callbacks.
-  // App.js will rely on `isModelLoaded` or status updates via `progressCb`.
-  // We can return a promise that resolves/rejects based on worker messages if needed,
-  // but for now, App.js will manage state via callbacks.
   return new Promise((resolve, reject) => {
     const originalCb = onLoadProgressCallback;
-    
+
     const tempOnLoad = (data) => {
       if (data.status === 'ready') {
         resolve(true);
@@ -145,7 +130,7 @@ export const processAudioChunk = (audioData, language, updateCb) => {
     return;
   }
   onUpdateCallback = updateCb;
-  
+
   worker.postMessage({
     type: 'generate',
     data: {
@@ -160,22 +145,12 @@ export const isModelLoaded = () => {
 };
 
 export const disposeModel = async () => {
-  // Worker doesn't have an explicit dispose model message yet.
-  // Terminating the worker will clean up its resources.
   if (worker) {
     worker.terminate();
     worker = null;
     modelState = 'unloaded';
-    localAgreementPolicy.reset(); // Reset policy state
-    currentAccumulatedTranscript = ""; // Reset accumulator
     console.log('Transcription worker terminated.');
   }
   onUpdateCallback = null;
   onLoadProgressCallback = null;
-};
-
-export const startNewTranscriptionSession = () => {
-  console.log('Service: Starting new transcription session, resetting policy and accumulator.');
-  localAgreementPolicy.reset();
-  currentAccumulatedTranscript = "";
 };
