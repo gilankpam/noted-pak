@@ -356,11 +356,7 @@ export default function Page() {
               <textarea
                 value={editableTranscription}
                 onChange={(e) => setEditableTranscription(e.target.value)}
-                placeholder={
-                  modelReady
-                    ? "Transcription will appear here as you speak..."
-                    : "Loading transcription model..."
-                }
+                placeholder="Transcription will appear here as you speak..."
                 className="w-full h-full resize-none border-none outline-none bg-transparent text-gray-900 dark:text-gray-100 text-sm leading-relaxed"
                 data-oid="j77i933"
               />

@@ -31,6 +31,29 @@ async function checkWebGPU() {
   }
 }
 
+const systemPrompt = "You are a helpful meeting summarization assistant. Provide a concise summary based on the provided transcript.";
+
+function getUserMessage(meetingTitle, transcriptionText) {
+  let userMsg = `Summarize the following meeting transcript concisely, focusing on key decisions, action items, and important discussions. Current time is ${new Date()}`;
+  if (meetingTitle && meetingTitle.trim() !== "") {
+    userMsg += `The title of this meeting is "${meetingTitle}".`;
+  }
+  userMsg += `
+Structure the summary with the following sections:
+1. Meeting Overview: Date, attendees, and primary objective.
+2. Key Discussion Points: Bullet points of major topics covered (limit to 3-5).
+3. Decisions Made: Clear outcomes or resolutions agreed upon.
+4. Action Items: Specific tasks, assigned owners, and deadlines (if mentioned).
+5. Next Steps: Any follow-up meetings or pending discussions.
+
+Maintain a professional tone, avoid unnecessary details, and ensure clarity.
+
+Here is the transcript:
+"${transcriptionText}"`;
+
+  return userMsg;
+}
+
 /**
  * This class uses the Singleton pattern to enable lazy-loading of the pipeline
  */
@@ -99,16 +122,17 @@ async function generateSummaryOpenAI({ transcriptionText, meetingTitle, settings
     return;
   }
 
-  let userContent = `Summarize the following meeting transcript concisely, focusing on key decisions, action items, and important discussions.`;
-  if (meetingTitle && meetingTitle.trim() !== "") {
-    userContent += ` The title of this meeting is "${meetingTitle}".`;
-  }
-  userContent += ` Structure the summary with the following sections:\n\n1. Meeting Overview – Date, attendees, and primary objective.\n2. Key Discussion Points – Bullet points of major topics covered (limit to 3-5).\n3. Decisions Made – Clear outcomes or resolutions agreed upon.\n4. Action Items – Specific tasks, assigned owners, and deadlines (if mentioned).\n5. Next Steps – Any follow-up meetings or pending discussions.\nMaintain a professional tone, avoid unnecessary details, and ensure clarity. Here is the transcript:\n\n"${transcriptionText}"`;
-
   const messages = [
-    { role: "system", content: "You are a helpful meeting summarization assistant. Provide a concise summary based on the provided transcript." },
-    { role: "user", content: userContent }
+    { role: "system", content: systemPrompt },
+    { role: "user", content: getUserMessage(meetingTitle, transcriptionText) }
   ];
+
+  // Inform the UI
+  self.postMessage({
+    status: "update",
+    output: "",
+    state: 'thinking'
+  });
 
   try {
     const response = await fetch(`${baseUrl}/chat/completions`, {
@@ -208,17 +232,9 @@ async function generateSummaryLocal({ transcriptionText, meetingTitle }) {
       self.postMessage(progress); // Forward progress events
     });
 
-    // Construct the user content with the meeting title
-    let userContent = `Summarize the following meeting transcript concisely, focusing on key decisions, action items, and important discussions.`;
-    if (meetingTitle && meetingTitle.trim() !== "") {
-      userContent += ` The title of this meeting is "${meetingTitle}".`;
-    }
-    userContent += ` Structure the summary with the following sections:\n\n1. Meeting Overview – Date, attendees, and primary objective.\n2. Key Discussion Points – Bullet points of major topics covered (limit to 3-5).\n3. Decisions Made – Clear outcomes or resolutions agreed upon.\n4. Action Items – Specific tasks, assigned owners, and deadlines (if mentioned).\n5. Next Steps – Any follow-up meetings or pending discussions.\nMaintain a professional tone, avoid unnecessary details, and ensure clarity. Here is the transcript:\n\n"${transcriptionText}"`;
-    
-    // Always use chat template for thinking mode
     const messages = [
-      { role: "system", content: "You are a helpful meeting summarization assistant. First, think about the key points of the transcription, then provide a concise summary." },
-      { role: "user", content: userContent }
+      { role: "system", content: systemPrompt },
+      { role: "user", content: getUserMessage(meetingTitle, transcriptionText) }
     ];
 
     const inputs = tokenizer.apply_chat_template(messages, {
@@ -232,16 +248,9 @@ async function generateSummaryLocal({ transcriptionText, meetingTitle }) {
       { add_special_tokens: false },
     );
 
-    let startTime;
-    let numTokens = 0;
-    let tps;
     let state = "thinking"; // 'thinking' or 'answering'
 
     const token_callback_function = (tokens) => {
-      startTime ??= performance.now();
-      if (numTokens++ > 0) {
-        tps = (numTokens / (performance.now() - startTime)) * 1000;
-      }
       // Always check for think tokens
       switch (Number(tokens[0])) {
         case START_THINKING_TOKEN_ID:
@@ -251,20 +260,18 @@ async function generateSummaryLocal({ transcriptionText, meetingTitle }) {
           state = "answering";
           break;
       }
-      // console.log(state, tokens, tokenizer.decode(tokens));
     };
 
     const callback_function = (output) => {
       let dataToSend = {
         status: "update",
-        output: "", // Default to empty output
-        tps,
-        numTokens,
-        state,
+        output: "",
+        state
       };
 
+      const regex = /<\/think>/;
       // Always apply thinking mode logic for streaming
-      if (state === "answering") {
+      if (state === "answering" && !regex.test(output)) {
         dataToSend.output = output; // Send raw output during answering state
       }
       // If state is "thinking", output remains empty. App.js shows status based on state.
@@ -281,10 +288,10 @@ async function generateSummaryLocal({ transcriptionText, meetingTitle }) {
     const generationConfig = {
       ...inputs,
       past_key_values: past_key_values_cache,
-      do_sample: true,
+      do_sample: false,
       top_k: 20, // Always use thinking mode parameters
       temperature: 0.6, // Always use thinking mode parameters
-      max_new_tokens: 1024, // Always use thinking mode parameters
+      max_new_tokens: 4092, // Always use thinking mode parameters
       streamer,
       stopping_criteria,
       return_dict_in_generate: true,
