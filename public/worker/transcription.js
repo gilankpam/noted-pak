@@ -96,19 +96,19 @@ class SpeakerVerificationPipeline {
   static model = null;
   static processor = null;
 
-  static async getInstance() {
+  static async getInstance(progress_callback = () => {}) {
     if (!this.processor) {
       this.processor = await AutoProcessor.from_pretrained(this.model_id, {
             device: 'wasm',
             dtype: 'fp32',
-            progress_callback: x => console.log(x)
+            progress_callback
         });
     }
     if (!this.model) {
       this.model = await AutoModel.from_pretrained(this.model_id, {
             device: 'wasm',
             dtype: 'fp32',
-            progress_callback: x => console.log(x)
+            progress_callback
         });
     }
 
@@ -246,7 +246,7 @@ async function load({ modelName } = null) {
     });
 
     // Load speaker verification
-    const [verificationProcessor, verificationModel] = await SpeakerVerificationPipeline.getInstance(); 
+    const [verificationProcessor, verificationModel] = await SpeakerVerificationPipeline.getInstance(x => self.postMessage(x)); 
     const verificationInputs = await verificationProcessor(new Float32Array(16000 * 1));
     await verificationModel(verificationInputs)
 
