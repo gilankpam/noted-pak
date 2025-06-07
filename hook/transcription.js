@@ -394,52 +394,115 @@ export const useTranscription = () => {
         }
       }
 
-      console.log('Requesting screen share permission...');
-      // At this point, model is loaded. Now try to get media.
-      const stream = await navigator.mediaDevices.getDisplayMedia({
-        video: true,
-        audio: { sampleRate: 16000, channelCount: 1 }
-      });
-      mediaStreamRef.current = stream;
+      let stream = null; // Initialize stream to null
+      let streamSourceType = 'screen'; // 'screen' or 'mic'
 
-      const audioTracks = stream.getAudioTracks();
-      if (audioTracks.length === 0 || !audioTracks[0].enabled || audioTracks[0].muted) {
-        console.log('Error: No active audio track from screen share. Ensure "Share tab audio" is checked and audio is playing.');
-        console.error('No active audio track found in screen share.');
-        stream.getTracks().forEach(track => track.stop());
-        mediaStreamRef.current = null;
-        // setIsStarting(false); // Handled by finally
-        return;
+      if (navigator.mediaDevices && navigator.mediaDevices.getDisplayMedia) {
+        console.log('Requesting screen share permission...');
+        try {
+          const screenStream = await navigator.mediaDevices.getDisplayMedia({
+            video: true,
+            audio: { sampleRate: 16000, channelCount: 1 }
+          });
+          mediaStreamRef.current = screenStream;
+          stream = screenStream; // Assign to the main stream variable
+
+          const audioTracks = screenStream.getAudioTracks();
+          if (audioTracks.length === 0 || !audioTracks[0].enabled || audioTracks[0].muted) {
+            console.log('Warning: No active audio track from screen share. Ensure "Share tab audio" is checked. Transcription will proceed, relying on mic if unmuted or screen video only.');
+            // Do not return; VAD setup will handle audio source selection
+          } else {
+            console.log('Screen share audio stream acquired.');
+          }
+        } catch (displayMediaError) {
+          console.warn('Failed to get display media, attempting to use microphone only.', displayMediaError);
+          stream = null; // Ensure stream is null if getDisplayMedia failed
+        }
+      } else {
+        console.log('getDisplayMedia not supported by this browser. Attempting to use microphone only.');
+        stream = null; // Explicitly set to null as getDisplayMedia is not available
+      }
+
+      // If screen share was not successful or not supported, try microphone
+      if (!stream) {
+        console.log('Attempting to use microphone as primary audio source.');
+        if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+          try {
+            const micStream = await navigator.mediaDevices.getUserMedia({
+              audio: { sampleRate: 16000, channelCount: 1 },
+              video: false
+            });
+            userMicStreamRef.current = micStream;
+            stream = micStream; // Assign to the main stream variable
+            streamSourceType = 'mic';
+            console.log('Microphone stream acquired.');
+            setIsMicMuted(false); // Mic is active by default when acquired this way
+          } catch (micError) {
+            console.error('Error acquiring microphone stream:', micError);
+            console.log(`Failed to get microphone: ${micError.message}. Cannot start transcription.`);
+            setIsStarting(false); // Ensure this is reset before returning
+            return;
+          }
+        } else {
+          console.error('getUserMedia not supported by this browser. Cannot start transcription.');
+          console.log('Neither screen sharing nor microphone input is available. Cannot start transcription.');
+          setIsStarting(false); // Ensure this is reset before returning
+          return;
+        }
       }
       
-      console.log('Screen share audio stream acquired.');
-      setIsTranscribing(true); // Critical: set this before VAD setup that might use isTranscribingRef
-      setTranscription('');
-      setIsMicMuted(true);
-      setIsPaused(false); 
+      // At this point, 'stream' should be either the screen share stream or the mic stream.
+      // And mediaStreamRef or userMicStreamRef is populated accordingly.
+      // If stream is still null here, it means both attempts failed, and we should have returned.
 
-      const vadSetupSuccess = await setupVAD(true); 
+      setIsTranscribing(true);
+      setTranscription('');
+      // Set initial mic muted state based on stream source
+      if (streamSourceType === 'screen') {
+        setIsMicMuted(true); // For screen share, user mic is initially muted
+      }
+      // If 'mic', setIsMicMuted(false) was already called.
+      setIsPaused(false);
+
+      // Pass the current state of isMicMuted to setupVAD.
+      // If screen share, it's true. If mic-only, it's false.
+      const vadSetupSuccess = await setupVAD(isMicMuted);
       if (!vadSetupSuccess) {
           console.error("VAD setup failed during start transcription.");
-          // handleStopTranscription will call setIsTranscribing(false)
-          // and other cleanup.
-          handleStopTranscription(); 
+          handleStopTranscription();
           console.log("Failed to initialize audio processing. Transcription stopped.");
           // setIsStarting(false); // Handled by finally
-          return; 
+          return;
       }
 
-      mediaStreamRef.current.getTracks().forEach(track => {
-        track.onended = () => {
-          console.log('Screen share media stream track ended.');
-          if (isTranscribingRef.current) {
-            console.log("Screen share ended. Stopping transcription.");
-            handleStopTranscription();
-          }
-        };
-      });
+      // Handle stream ending for the appropriate stream
+      if (streamSourceType === 'screen' && mediaStreamRef.current) {
+        mediaStreamRef.current.getTracks().forEach(track => {
+          track.onended = () => {
+            console.log('Screen share media stream track ended.');
+            if (isTranscribingRef.current) {
+              console.log("Screen share ended. Stopping transcription.");
+              handleStopTranscription();
+            }
+          };
+        });
+      } else if (streamSourceType === 'mic' && userMicStreamRef.current) {
+        userMicStreamRef.current.getAudioTracks().forEach(track => {
+            track.onended = () => {
+                console.log('Microphone media stream track ended.');
+                if (isTranscribingRef.current) {
+                    console.log("Microphone stream ended. Stopping transcription.");
+                    handleStopTranscription();
+                }
+            };
+        });
+      }
 
-      console.log('Transcription started. Share a tab with audio. Mic is initially muted.');
+      if (streamSourceType === 'screen') {
+        console.log('Transcription started with screen share. Mic is initially muted.');
+      } else {
+        console.log('Transcription started with microphone only.');
+      }
 
     } catch (error) {
       console.error('Error starting transcription:', error);
