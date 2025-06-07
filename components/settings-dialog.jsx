@@ -33,19 +33,40 @@ export function SettingsDialog() {
   // Define whisperModels based on whisperModelOptions from transcription.worker.js
   // Using 'modelSlug' as the value for selection.
   const whisperModels = [
-    { value: "whisper_base_q4", label: "Whisper Base q4 (Lightest) (143 MB)" },
-    { value: "whisper_base_f32", label: "Whisper Base f32 (Light) (291 MB)" },
+    { 
+      value: "whisper_base_q4", 
+      name: "Whisper Base q4",
+      performance: "Lightest",
+      size: "143 MB",
+      performanceColor: "text-green-600 dark:text-green-400"
+    },
+    { 
+      value: "whisper_base_f32", 
+      name: "Whisper Base f32",
+      performance: "Light",
+      size: "291 MB",
+      performanceColor: "text-blue-600 dark:text-blue-400"
+    },
     {
       value: "whisper_distil_small",
-      label: "Whisper Distil Small (Heavy) (665 MB)",
+      name: "Whisper Distil Small",
+      performance: "Heavy",
+      size: "665 MB",
+      performanceColor: "text-orange-600 dark:text-orange-400"
     },
     {
       value: "whisper_small_q4",
-      label: "Whisper Small q4 (Heaviest) (295 MB)",
+      name: "Whisper Small q4",
+      performance: "Heaviest",
+      size: "295 MB",
+      performanceColor: "text-red-600 dark:text-red-400"
     },
     {
       value: "whisper_distil_medium",
-      label: "Whisper Distil Medium (Heavy) (1.6 GB)",
+      name: "Whisper Distil Medium",
+      performance: "Heavy",
+      size: "1.6 GB",
+      performanceColor: "text-orange-600 dark:text-orange-400"
     },
   ];
 
@@ -279,12 +300,26 @@ export function SettingsDialog() {
                   updateSTTSettings("whisperModel", value)
                 }
                 data-oid="oqoza50"
-              >
-                <SelectTrigger id="whisper-model" data-oid="2kaw2g8">
+              <SelectTrigger id="whisper-model" data-oid="2kaw2g8">
                   <SelectValue
                     placeholder="Select a Whisper model"
                     data-oid="3eadizc"
-                  />
+                  >
+                    {settings.stt.whisperModel && (() => {
+                      const selectedModel = whisperModels.find(m => m.value === settings.stt.whisperModel);
+                      return selectedModel ? (
+                        <div className="flex items-center gap-2">
+                          <span className="font-medium">{selectedModel.name}</span>
+                          <span className={`text-xs font-semibold px-2 py-0.5 rounded-full bg-opacity-10 ${selectedModel.performanceColor} ${selectedModel.performanceColor.replace('text-', 'bg-')}`}>
+                            {selectedModel.performance}
+                          </span>
+                          <span className="text-xs text-muted-foreground">
+                            {selectedModel.size}
+                          </span>
+                        </div>
+                      ) : null;
+                    })()}
+                  </SelectValue>
                 </SelectTrigger>
                 <SelectContent data-oid="985oa6-">
                   {whisperModels.map((model) => (
@@ -292,8 +327,21 @@ export function SettingsDialog() {
                       key={model.value}
                       value={model.value}
                       data-oid="d18tnus"
+                      className="py-3"
                     >
-                      {model.label}
+                      <div className="flex flex-col gap-1">
+                        <div className="font-medium text-sm">
+                          {model.name}
+                        </div>
+                        <div className="flex items-center gap-2 text-xs">
+                          <span className={`font-semibold px-2 py-0.5 rounded-full bg-opacity-10 ${model.performanceColor} ${model.performanceColor.replace('text-', 'bg-')}`}>
+                            {model.performance}
+                          </span>
+                          <span className="text-muted-foreground">
+                            {model.size}
+                          </span>
+                        </div>
+                      </div>
                     </SelectItem>
                   ))}
                 </SelectContent>
