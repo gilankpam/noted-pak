@@ -33,8 +33,10 @@ export function SettingsDialog() {
   // Define whisperModels based on whisperModelOptions from transcription.worker.js
   // Using 'modelSlug' as the value for selection.
   const whisperModels = [
-    { value: "whisper_base_f32", label: "Whisper Base f32 (Heavier)" },
-    { value: "whisper_base_q4", label: "Whisper Base q4 (Lighter)" },
+    { value: "whisper_base_q4", label: "Whisper Base q4 (Lightest)" },
+    { value: "whisper_base_f32", label: "Whisper Base f32 (Light)" },
+    { value: "whisper_distil_small", label: "Whisper Distil Small (Heavy)" },
+    { value: "whisper_small_q4", label: "Whisper Small q4 (Heaviest)" },
   ];
 
   const initialSettings = {

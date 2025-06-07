@@ -13,7 +13,6 @@ env.allowLocalModels = false;
 
 const whisperModelOptions = {
   whisper_base_f32: {
-    label: 'Whisper Base f32 (Heavier)',
     model_id: 'onnx-community/whisper-base',
     params: {
       dtype: {
@@ -23,13 +22,27 @@ const whisperModelOptions = {
     }
   },
   whisper_base_q4: {
-    label: 'Whisper Base q4 (Lighter)',
     model_id: 'onnx-community/whisper-base',
     params: {
       dtype: {
         encoder_model: "q4",
         decoder_model_merged: "q4",
       },
+    }
+  },
+  whisper_small_q4: {
+    model_id: 'onnx-community/whisper-small',
+    params: {
+      dtype: {
+        encoder_model: "q4",
+        decoder_model_merged: "q4",
+      },
+    }
+  },
+  whisper_distil_small: {
+    model_id: 'distil-whisper/distil-small.en',
+    params: {
+      model_file_name: 'encoder_model_quantized'
     }
   }
 }
@@ -217,7 +230,7 @@ async function processAudioQueue() {
     await model.generate({
       ...inputs,
       max_new_tokens: MAX_NEW_TOKENS,
-      language: language || "en",
+      language: AutomaticSpeechRecognitionPipeline.currentModel.includes('distil') ? undefined : language || "en",
       streamer
     });
 
