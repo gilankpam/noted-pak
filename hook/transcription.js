@@ -249,11 +249,6 @@ export const useTranscription = () => {
         onSpeechEnd: (audio) => {
           console.log(`VAD: Speech ended. Audio data length: ${audio.length}`);
           if (audio.length > 0 && isTranscribingRef.current && !isPausedRef.current) {
-            if (isProcessingAudioRef.current) {
-              console.log("VAD: Transcription worker busy, dropping this speech segment.");
-              return;
-            }
-            isProcessingAudioRef.current = true;
             console.log("VAD processing");
             processAudioChunk(audio, 'en', transcriptionUpdateCallbackRef.current);
           } else if (audio.length === 0) {

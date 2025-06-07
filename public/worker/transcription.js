@@ -101,7 +101,6 @@ class SpeakerVerificationPipeline {
       this.processor = await AutoProcessor.from_pretrained(this.model_id, {
             device: 'wasm',
             dtype: 'fp32',
-            // model_file_name: 'model_quantized',
             progress_callback: x => console.log(x)
         });
     }
@@ -109,7 +108,6 @@ class SpeakerVerificationPipeline {
       this.model = await AutoModel.from_pretrained(this.model_id, {
             device: 'wasm',
             dtype: 'fp32',
-            // model_file_name: 'model_quantized',
             progress_callback: x => console.log(x)
         });
     }
@@ -119,37 +117,78 @@ class SpeakerVerificationPipeline {
 }
 
 let processing = false;
+let audioQueue = []; // Initialize the audio queue
 let speakerEmbeddings = [];
+const SIMILARITY_THRESHOLD = 0.7; // Threshold for considering embeddings as same speaker
 
-function getSpeakerId(embeddings) {
+function getSpeakerId(newEmbeddings) {
   if (speakerEmbeddings.length === 0) {
-    speakerEmbeddings.push(embeddings);
-    return 0;
+    speakerEmbeddings.push(newEmbeddings);
+    return 0; // First speaker
   }
 
-  // Loop through existing speakerEmbeddings
-  for (const e of speakerEmbeddings) {
-    console.log(cos_sim(e, embeddings));
+  let bestMatchSpeakerId = -1;
+  let highestSimilarity = -1;
+
+  for (let i = 0; i < speakerEmbeddings.length; i++) {
+    const existingEmbedding = speakerEmbeddings[i];
+    const similarity = cos_sim(existingEmbedding, newEmbeddings);
+
+    if (similarity > highestSimilarity) {
+      highestSimilarity = similarity;
+      if (similarity >= SIMILARITY_THRESHOLD) {
+        bestMatchSpeakerId = i;
+      }
+    }
+  }
+
+  if (bestMatchSpeakerId !== -1) {
+    // Found a sufficiently similar speaker
+    return bestMatchSpeakerId;
+  } else {
+    // No existing speaker is similar enough, add as a new speaker
+    speakerEmbeddings.push(newEmbeddings);
+    return speakerEmbeddings.length - 1; // New speaker ID
   }
 }
 
 async function generate({ audio, language = 'en'}) {
-  if (processing) {
-    self.postMessage({ status: "busy", error: "Processor is busy." });
+  audioQueue.push({ audio, language });
+  if (!processing) {
+    processAudioQueue();
+  }
+}
+
+async function processAudioQueue() {
+  if (audioQueue.length === 0) {
     return;
   }
+  if (processing) {
+    return;
+  }
+
   processing = true;
+  const { audio, language } = audioQueue.shift();
 
   self.postMessage({ status: "start" });
 
   try {
+    // Get speaker verification first
+    const [verificationProcessor, verificationModel] = await SpeakerVerificationPipeline.getInstance();
+    // Use a slice of the audio for speaker ID, ensuring it's not longer than the audio itself
+    const audioSliceForSpeakerId = audio.length >= 2 * 16000 ? audio.slice(8000, 8000 + 16000) : audio;
+    const verificationInputs = await verificationProcessor(audioSliceForSpeakerId);
+    const { embeddings } = await verificationModel(verificationInputs);
+    const speaker_id = getSpeakerId(embeddings.data);
+
     const [tokenizer, processor, model] =
       AutomaticSpeechRecognitionPipeline.getInstance();
 
     const callback_function = (output) => {
       self.postMessage({
         status: "update",
-        output
+        output,
+        speaker_id 
       });
     };
 
@@ -168,22 +207,19 @@ async function generate({ audio, language = 'en'}) {
       streamer
     });
 
-    // Get speaker verification
-    const [verificationProcessor, verificationModel] = await SpeakerVerificationPipeline.getInstance();
-    // Get the first 2 second
-    const verificationInputs = await verificationProcessor(audio.slice(0, 2 * 16000));
-    const { embeddings } = await verificationModel(verificationInputs);
-
-    getSpeakerId(embeddings.data);
-
     self.postMessage({
-      status: "complete"
+      status: "complete",
+      speaker_id
     });
 
   } catch (error) {
     self.postMessage({ status: "error", error: error.message, stack: error.stack });
   } finally {
     processing = false;
+    // If there are more items in the queue, process the next one
+    if (audioQueue.length > 0) {
+      processAudioQueue();
+    }
   }
 }
 

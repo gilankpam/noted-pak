@@ -4,6 +4,7 @@ let worker = null;
 let modelState = 'unloaded'; // 'unloaded', 'loading', 'ready', 'error'
 let onUpdateCallback = null; // For App.js to receive transcription updates
 let onLoadProgressCallback = null; // For App.js to receive loading progress
+let lastSpeakerId = null;
 
 const initializeWorker = () => {
   if (!worker) {
@@ -12,7 +13,7 @@ const initializeWorker = () => {
     });
 
     worker.onmessage = (event) => {
-      const { status, output, error, data, stack } = event.data;
+      const { status, output, speaker_id, error, data, stack } = event.data;
 
       switch (status) {
         case 'loading':
@@ -33,10 +34,17 @@ const initializeWorker = () => {
                 return;
             }
 
+            let outputText = output.trim();
+
+            if (lastSpeakerId !== speaker_id) {
+              outputText = `\nSPEAKER_${speaker_id}: ${outputText}`;
+              lastSpeakerId = speaker_id;
+            }
+
             // Send the full accumulated transcript
             onUpdateCallback({
               type: 'update',
-              text: output.trim(),
+              text: outputText,
             });
           }
           break;
