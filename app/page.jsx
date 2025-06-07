@@ -89,46 +89,30 @@ export default function Page() {
   };
 
   return (
-    <div
-      className="w-full min-h-screen bg-white dark:bg-black transition-colors duration-200 p-6"
-      data-oid="7-v5ja6"
-    >
+    <div className="w-full min-h-screen bg-white dark:bg-black transition-colors duration-200 p-6">
       {/* Header */}
-      <div className="mb-8" data-oid="t5n90q0">
-        <h1
-          className="text-3xl md:text-4xl font-bold text-gray-900 dark:text-gray-100 mb-2"
-          data-oid="40oi7s6"
-        >
+      <div className="mb-8">
+        <h1 className="text-3xl md:text-4xl font-bold text-gray-900 dark:text-gray-100 mb-2">
           Meeting Transcription and Stuff
         </h1>
-        <p
-          className="text-lg text-gray-600 dark:text-gray-400"
-          data-oid="b2qjfq:"
-        >
+        <p className="text-lg text-gray-600 dark:text-gray-400">
           Record, transcribe, and enhance your meeting conversations
         </p>
       </div>
 
       {/* Main Content - Two Column Layout */}
-      <div
-        className="grid grid-cols-1 lg:grid-cols-2 gap-8 h-[calc(100vh-200px)]"
-        data-oid="maijwl8"
-      >
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 h-[calc(100vh-200px)]">
         {/* Left Column - Transcription and Controls */}
-        <div className="flex flex-col space-y-6" data-oid="asfghds">
+        <div className="flex flex-col space-y-6">
           {/* Control Buttons */}
-          <div
-            className="bg-gray-50 dark:bg-gray-900 rounded-lg p-6"
-            data-oid="5zo_3:q"
-          >
+          <div className="bg-gray-50 dark:bg-gray-900 rounded-lg p-6">
             {/* Meeting Title Input */}
-            <div className="mb-6" data-oid="gpiv:jh">
+            <div className="mb-6">
               {" "}
               {/* Increased mb for spacing */}
               <label
                 htmlFor="meeting-title"
                 className="block text-lg font-medium text-gray-700 dark:text-gray-300 mb-2"
-                data-oid="n0:dhr7"
               >
                 Meeting Title
               </label>
@@ -139,11 +123,10 @@ export default function Page() {
                 onChange={(e) => setMeetingTitle(e.target.value)}
                 placeholder="Enter meeting title (e.g., Weekly Team Standup)"
                 className="w-full px-4 py-3 text-lg border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                data-oid="amvgl:j"
               />
             </div>
 
-            <div className="flex flex-wrap gap-3" data-oid="wwpc71s">
+            <div className="flex flex-wrap gap-3">
               <button
                 onClick={
                   isTranscribing
@@ -160,33 +143,24 @@ export default function Page() {
                         ? "bg-green-600 hover:bg-green-700" // Resume button
                         : "bg-yellow-600 hover:bg-yellow-700" // Pause button
                 }`}
-                data-oid="wqy7c55"
               >
                 {isStarting ? (
-                  <div
-                    className="w-3 h-3 bg-white animate-pulse"
-                    data-oid="tadyqhz"
-                  ></div>
+                  <div className="w-3 h-3 bg-white animate-pulse"></div>
                 ) : !isTranscribing || isTranscriptionPaused ? (
                   <svg
                     viewBox="0 0 24 24"
                     className="w-4 h-4 fill-white"
                     xmlns="http://www.w3.org/2000/svg"
-                    data-oid="w_4l6n5"
                   >
-                    <path d="M8 5v14l11-7z" data-oid="w_mcj:u" />
+                    <path d="M8 5v14l11-7z" />
                   </svg>
                 ) : (
                   <svg
                     viewBox="0 0 24 24"
                     className="w-4 h-4 fill-white"
                     xmlns="http://www.w3.org/2000/svg"
-                    data-oid="wwjb9pw"
                   >
-                    <path
-                      d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"
-                      data-oid="7mc0752"
-                    />
+                    <path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z" />
                   </svg>
                 )}
                 {isStarting
@@ -202,9 +176,8 @@ export default function Page() {
                 onClick={handleStopRecording}
                 disabled={!isTranscribing}
                 className="px-6 py-3 bg-red-600 hover:bg-red-700 disabled:bg-gray-400 text-white rounded-lg font-medium transition-colors duration-200 flex items-center gap-2"
-                data-oid="adgzbrq"
               >
-                <div className="w-3 h-3 bg-white" data-oid="sle2qq7"></div>
+                <div className="w-3 h-3 bg-white"></div>
                 Stop Recording
               </button>
 
@@ -225,7 +198,6 @@ export default function Page() {
                       ? "Unmute Microphone"
                       : "Mute Microphone"
                 }
-                data-oid="h54l:1-"
               >
                 {isMicMuted ? (
                   <svg
@@ -235,20 +207,17 @@ export default function Page() {
                     strokeWidth={1.5}
                     stroke="currentColor"
                     className="w-5 h-5"
-                    data-oid="ehnmyo."
                   >
                     <path
                       strokeLinecap="round"
                       strokeLinejoin="round"
                       d="M12 18.75a6 6 0 0 0 6-6v-1.5m-6 7.5a6 6 0 0 1-6-6v-1.5m6 7.5v3.75m-3.75 0h7.5M12 15.75a3 3 0 0 1-3-3V4.5a3 3 0 1 1 6 0v8.25a3 3 0 0 1-3 3Z"
-                      data-oid="_6dme0u"
                     />
 
                     <path
                       strokeLinecap="round"
                       strokeLinejoin="round"
                       d="m3 3 18 18"
-                      data-oid="04sm:el"
                     />
                   </svg>
                 ) : (
@@ -259,24 +228,22 @@ export default function Page() {
                     strokeWidth={1.5}
                     stroke="currentColor"
                     className="w-5 h-5"
-                    data-oid="q1.oxh-"
                   >
                     <path
                       strokeLinecap="round"
                       strokeLinejoin="round"
                       d="M12 18.75a6 6 0 0 0 6-6v-1.5m-6 7.5a6 6 0 0 1-6-6v-1.5m6 7.5v3.75m-3.75 0h7.5M12 15.75a3 3 0 0 1-3-3V4.5a3 3 0 1 1 6 0v8.25a3 3 0 0 1-3 3Z"
-                      data-oid="hi_m29v"
                     />
                   </svg>
                 )}
               </button>
 
-              <SettingsDialog data-oid="wsx8ai1" />
+              <SettingsDialog />
             </div>
 
             {/* Status Indicator */}
-            <div className="mt-4" data-oid=".cs.0s8">
-              <div className="flex items-center gap-2" data-oid="ycjgc_k">
+            <div className="mt-4">
+              <div className="flex items-center gap-2">
                 <div
                   className={`w-3 h-3 rounded-full ${
                     isTranscribing
@@ -287,12 +254,8 @@ export default function Page() {
                         ? "bg-gray-400" // Ready
                         : "bg-blue-500 animate-pulse" // Loading model
                   }`}
-                  data-oid="vl4xy1."
                 ></div>
-                <span
-                  className="text-sm text-gray-600 dark:text-gray-400"
-                  data-oid="a6pw1tm"
-                >
+                <span className="text-sm text-gray-600 dark:text-gray-400">
                   {isStarting
                     ? "Loading model..."
                     : isTranscribing
@@ -308,18 +271,9 @@ export default function Page() {
           </div>
 
           {/* Transcription Area */}
-          <div
-            className="flex-1 bg-gray-50 dark:bg-gray-900 rounded-lg p-6"
-            data-oid="8f25z9y"
-          >
-            <div
-              className="flex justify-between items-center mb-4"
-              data-oid="k-2mmug"
-            >
-              <h2
-                className="text-xl font-semibold text-gray-900 dark:text-gray-100"
-                data-oid="xudt92t"
-              >
+          <div className="flex-1 bg-gray-50 dark:bg-gray-900 rounded-lg p-6">
+            <div className="flex justify-between items-center mb-4">
+              <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100">
                 Live Transcription
               </h2>
               <button
@@ -340,7 +294,6 @@ export default function Page() {
                       ? "bg-gray-400 cursor-not-allowed" // Disabled/loading model style
                       : "bg-blue-600 hover:bg-blue-700" // "Enhance" style
                 } disabled:bg-gray-400`}
-                data-oid="eg46eoj"
               >
                 {isSummarizing
                   ? "Cancel Summarization"
@@ -349,35 +302,22 @@ export default function Page() {
                     : "Enhance Transcription"}
               </button>
             </div>
-            <div
-              className="h-full min-h-[300px] bg-white dark:bg-gray-800 rounded-lg p-4 border border-gray-200 dark:border-gray-700"
-              data-oid="jo242zc"
-            >
+            <div className="h-full min-h-[300px] bg-white dark:bg-gray-800 rounded-lg p-4 border border-gray-200 dark:border-gray-700">
               <textarea
                 value={editableTranscription}
                 onChange={(e) => setEditableTranscription(e.target.value)}
                 placeholder="Transcription will appear here as you speak..."
                 className="w-full h-full resize-none border-none outline-none bg-transparent text-gray-900 dark:text-gray-100 text-sm leading-relaxed"
-                data-oid="1tvox6p"
               />
             </div>
           </div>
         </div>
 
         {/* Right Column - Enhancement Output */}
-        <div className="flex flex-col" data-oid="iw699yx">
-          <div
-            className="bg-gray-50 dark:bg-gray-900 rounded-lg p-6 h-full"
-            data-oid="_dqcjrn"
-          >
-            <div
-              className="flex justify-between items-center mb-4"
-              data-oid="8fvnr-l"
-            >
-              <h2
-                className="text-xl font-semibold text-gray-900 dark:text-gray-100"
-                data-oid="0ofr4sk"
-              >
+        <div className="flex flex-col">
+          <div className="bg-gray-50 dark:bg-gray-900 rounded-lg p-6 h-full">
+            <div className="flex justify-between items-center mb-4">
+              <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100">
                 Meeting Enhancement
               </h2>
               <button
@@ -391,7 +331,6 @@ export default function Page() {
                       : "bg-gray-600 hover:bg-gray-700"
                 }`}
                 title="Copy markdown text to clipboard"
-                data-oid="v0:q.cn"
               >
                 {copySuccess ? (
                   <>
@@ -402,13 +341,11 @@ export default function Page() {
                       strokeWidth={1.5}
                       stroke="currentColor"
                       className="w-4 h-4"
-                      data-oid="nwam53-"
                     >
                       <path
                         strokeLinecap="round"
                         strokeLinejoin="round"
                         d="M4.5 12.75l6 6 9-13.5"
-                        data-oid="k2_g:eh"
                       />
                     </svg>
                     Copied!
@@ -422,13 +359,11 @@ export default function Page() {
                       strokeWidth={1.5}
                       stroke="currentColor"
                       className="w-4 h-4"
-                      data-oid="f2.qbf8"
                     >
                       <path
                         strokeLinecap="round"
                         strokeLinejoin="round"
                         d="M15.666 3.888A2.25 2.25 0 0013.5 2.25h-3c-1.03 0-1.9.693-2.166 1.638m7.332 0c.055.194.084.4.084.612v0a.75.75 0 01-.75.75H9a.75.75 0 01-.75-.75v0c0-.212.03-.418.084-.612m7.332 0c.646.049 1.288.11 1.927.184 1.1.128 1.907 1.077 1.907 2.185V19.5a2.25 2.25 0 01-2.25 2.25H6.75A2.25 2.25 0 014.5 19.5V6.257c0-1.108.806-2.057 1.907-2.185a48.208 48.208 0 011.927-.184"
-                        data-oid="x0zj5z9"
                       />
                     </svg>
                     Copy Markdown
@@ -436,35 +371,20 @@ export default function Page() {
                 )}
               </button>
             </div>
-            <div
-              className="h-full min-h-[400px] bg-white dark:bg-gray-800 rounded-lg p-4 border border-gray-200 dark:border-gray-700 overflow-y-auto flex flex-col"
-              data-oid="v_zub2m"
-            >
+            <div className="h-full min-h-[400px] bg-white dark:bg-gray-800 rounded-lg p-4 border border-gray-200 dark:border-gray-700 overflow-y-auto flex flex-col">
               {(isLoadingSummarizationModel && !isSummarizing) ||
               (isSummarizing && summarizationState === "thinking") ? (
                 // Centered spinner for initial model loading or "thinking" state
-                <div
-                  className="flex items-center justify-center h-full"
-                  data-oid="4y0_l6o"
-                >
-                  <div className="text-center" data-oid="n92kc9b">
-                    <div
-                      className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"
-                      data-oid="8c38z3w"
-                    ></div>
-                    <p
-                      className="text-gray-600 dark:text-gray-400"
-                      data-oid="hxa6x:3"
-                    >
+                <div className="flex items-center justify-center h-full">
+                  <div className="text-center">
+                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
+                    <p className="text-gray-600 dark:text-gray-400">
                       {isSummarizing && summarizationState === "thinking"
                         ? "Thinking..."
                         : "Loading summarization model..."}
                     </p>
                     {isSummarizing && summarizationState === "thinking" && (
-                      <p
-                        className="text-xs text-gray-500 dark:text-gray-400 mt-1"
-                        data-oid="nx12v5r"
-                      >
+                      <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
                         The model is processing the information.
                       </p>
                     )}
@@ -475,31 +395,22 @@ export default function Page() {
                 <>
                   <div
                     className="flex-grow text-gray-900 dark:text-gray-100 text-sm leading-relaxed prose dark:prose-invert" // Added prose classes for markdown styling
-                    data-oid="56qr:-x"
                   >
                     {summaryText ? (
-                      <ReactMarkdown data-oid="3g.g3xr">
-                        {summaryText}
-                      </ReactMarkdown>
+                      <ReactMarkdown>{summaryText}</ReactMarkdown>
                     ) : (
                       !isSummarizing &&
                       !isLoadingSummarizationModel && (
-                        <div
-                          className="flex items-center justify-center h-full"
-                          data-oid="sv5g:8r"
-                        >
-                          <p
-                            className="text-gray-500 dark:text-gray-400 text-center"
-                            data-oid="8o13rba"
-                          >
+                        <div className="flex items-center justify-center h-full">
+                          <p className="text-gray-500 dark:text-gray-400 text-center">
                             {summarizationModelLoadingProgress &&
                             !summarizationModelReady &&
                             !isLoadingSummarizationModel
                               ? summarizationModelLoadingProgress // Show error if loading failed
                               : "Enhanced transcription will appear here after processing."}
-                            <br data-oid="grlrx.c" />
+                            <br />
                             {!summarizationModelLoadingProgress && (
-                              <span className="text-sm" data-oid="w:e4sjl">
+                              <span className="text-sm">
                                 Click "Enhance Transcription" to get started.
                               </span>
                             )}

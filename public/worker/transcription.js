@@ -42,6 +42,10 @@ const whisperModelOptions = {
   whisper_distil_small: {
     model_id: 'distil-whisper/distil-small.en',
     params: {}
+  },
+  whisper_distil_medium: {
+    model_id: 'distil-whisper/distil-medium.en',
+    params: {}
   }
 }
 
@@ -200,7 +204,7 @@ async function processAudioQueue() {
       // Get speaker verification first
       const [verificationProcessor, verificationModel] = await SpeakerVerificationPipeline.getInstance();
       // Use a slice of the audio for speaker ID, ensuring it's not longer than the audio itself
-      const audioSliceForSpeakerId = audio.length >= 2 * 16000 ? audio.slice(8000, 8000 + 16000) : audio;
+      const audioSliceForSpeakerId = audio.length >= 2 * 16000 ? audio.slice(16000, 2 * 16000) : audio;
       const verificationInputs = await verificationProcessor(audioSliceForSpeakerId);
       const { embeddings } = await verificationModel(verificationInputs);
       speaker_id = getSpeakerId(embeddings.data);
@@ -252,7 +256,7 @@ async function load({ modelName, enableDiarization } = null) {
   self.postMessage({
     status: "loading"
   });
-  
+
   try {
     const [, processor, model] = 
       await AutomaticSpeechRecognitionPipeline.loadModel(x => self.postMessage(x), modelName)

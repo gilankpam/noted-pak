@@ -5,8 +5,8 @@ export const metadata = {
 };
 export default function RootLayout({ children }) {
   return (
-    <html lang="en" data-oid="a2u-3-r">
-      <body className="" data-oid="l.owluz">
+    <html lang="en" data-oid="0do4fzy">
+      <body className="" data-oid="d2jnr5d">
         {children}
       </body>
     </html>
