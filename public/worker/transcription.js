@@ -252,9 +252,7 @@ async function load({ modelName, enableDiarization } = null) {
   self.postMessage({
     status: "loading"
   });
-
-  console.log('=======LOADING===========', enableDiarization);
-
+  
   try {
     const [, processor, model] = 
       await AutomaticSpeechRecognitionPipeline.loadModel(x => self.postMessage(x), modelName)
