@@ -22,6 +22,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { Checkbox } from "@/components/ui/checkbox";
 
 export function SettingsDialog() {
   const [open, setOpen] = useState(false);
@@ -39,6 +40,7 @@ export function SettingsDialog() {
   const initialSettings = {
     stt: {
       whisperModel: whisperModels[0].value, // Default to the first model's slug
+      enableDiarization: false,
     },
     llm: {
       type: "local",
@@ -284,6 +286,44 @@ export function SettingsDialog() {
                   ))}
                 </SelectContent>
               </Select>
+            </div>
+
+            <div className="space-y-3" data-oid="diarization-section">
+              <div
+                className="flex items-center space-x-2"
+                data-oid="diarization-checkbox"
+              >
+                <Checkbox
+                  id="enable-diarization"
+                  checked={settings.stt.enableDiarization}
+                  onCheckedChange={(checked) =>
+                    updateSTTSettings("enableDiarization", checked)
+                  }
+                  data-oid="diarization-input"
+                />
+
+                <Label
+                  htmlFor="enable-diarization"
+                  data-oid="diarization-label"
+                >
+                  Enable Speaker Diarization
+                </Label>
+              </div>
+              <div className="ml-6 space-y-1" data-oid="diarization-warning">
+                <p
+                  className="text-sm text-amber-600 dark:text-amber-400"
+                  data-oid="warning-text"
+                >
+                  ⚠️ Diarization is experimental and may not be reliable
+                </p>
+                <p
+                  className="text-sm text-muted-foreground"
+                  data-oid="resource-text"
+                >
+                  Uses significantly more computational resources and processing
+                  time
+                </p>
+              </div>
             </div>
           </TabsContent>
 
