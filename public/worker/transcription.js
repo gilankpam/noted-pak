@@ -127,6 +127,7 @@ class SpeakerVerificationPipeline {
 
 let processing = false;
 let audioQueue = []; // Initialize the audio queue
+let useDiarization = false;
 let speakerEmbeddings = [];
 const SIMILARITY_THRESHOLD = 0.7; // Threshold for considering embeddings as same speaker
 
@@ -182,13 +183,17 @@ async function processAudioQueue() {
   self.postMessage({ status: "start" });
 
   try {
-    // Get speaker verification first
-    const [verificationProcessor, verificationModel] = await SpeakerVerificationPipeline.getInstance();
-    // Use a slice of the audio for speaker ID, ensuring it's not longer than the audio itself
-    const audioSliceForSpeakerId = audio.length >= 2 * 16000 ? audio.slice(8000, 8000 + 16000) : audio;
-    const verificationInputs = await verificationProcessor(audioSliceForSpeakerId);
-    const { embeddings } = await verificationModel(verificationInputs);
-    const speaker_id = getSpeakerId(embeddings.data);
+    let speaker_id = null;
+
+    if (useDiarization) {
+      // Get speaker verification first
+      const [verificationProcessor, verificationModel] = await SpeakerVerificationPipeline.getInstance();
+      // Use a slice of the audio for speaker ID, ensuring it's not longer than the audio itself
+      const audioSliceForSpeakerId = audio.length >= 2 * 16000 ? audio.slice(8000, 8000 + 16000) : audio;
+      const verificationInputs = await verificationProcessor(audioSliceForSpeakerId);
+      const { embeddings } = await verificationModel(verificationInputs);
+      speaker_id = getSpeakerId(embeddings.data);
+    }
 
     const [tokenizer, processor, model] =
       AutomaticSpeechRecognitionPipeline.getInstance();
@@ -232,10 +237,12 @@ async function processAudioQueue() {
   }
 }
 
-async function load({ modelName } = null) {
+async function load({ modelName, enableDiarization } = null) {
   self.postMessage({
     status: "loading"
   });
+
+  console.log('=======LOADING===========', enableDiarization);
 
   try {
     const [, processor, model] = 
@@ -254,10 +261,13 @@ async function load({ modelName } = null) {
       max_new_tokens: 1, // Generate only one token for warmup
     });
 
-    // Load speaker verification
-    const [verificationProcessor, verificationModel] = await SpeakerVerificationPipeline.getInstance(x => self.postMessage(x)); 
-    const verificationInputs = await verificationProcessor(new Float32Array(16000 * 1));
-    await verificationModel(verificationInputs)
+    if (enableDiarization) {
+      useDiarization = enableDiarization;
+      // Load speaker verification
+      const [verificationProcessor, verificationModel] = await SpeakerVerificationPipeline.getInstance(x => self.postMessage(x)); 
+      const verificationInputs = await verificationProcessor(new Float32Array(16000 * 1));
+      await verificationModel(verificationInputs)
+    }
 
     self.postMessage({ status: "ready" });
   } catch (error) {
@@ -267,6 +277,7 @@ async function load({ modelName } = null) {
 
 async function unload() {
   audioQueue = [];
+  useDiarization = false;
   speakerEmbeddings = [];
   await SpeakerVerificationPipeline.unloadModel();
   await AutomaticSpeechRecognitionPipeline.unloadModel();

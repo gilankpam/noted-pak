@@ -37,7 +37,7 @@ export const useTranscription = () => {
     isPausedRef.current = isPaused;
   }, [isPaused]);
 
-  const handleLoadModel = useCallback((whisperModelName = null) => {
+  const handleLoadModel = useCallback((whisperModelName = null, enableDiarization = false) => {
     return new Promise(async (resolve) => {
       if (modelReady && !whisperModelName) {
         console.log('Transcription model already loaded and no specific model name requested.');
@@ -88,7 +88,7 @@ export const useTranscription = () => {
       };
 
       try {
-        await loadModel(progressCb, whisperModelName);
+        await loadModel(progressCb, whisperModelName, enableDiarization);
         if (!finished) {
           finished = true;
           resolve(modelReady);
@@ -356,12 +356,16 @@ export const useTranscription = () => {
       }
 
       const settingsString = localStorage.getItem('notedPakSettings');
-      let whisperModelNameToLoad = null; // Changed variable name
+      let whisperModelNameToLoad = null;
+      let enableDiarization = false;
       if (settingsString) {
         try {
           const parsedSettings = JSON.parse(settingsString);
           if (parsedSettings.stt && parsedSettings.stt.whisperModel) {
             whisperModelNameToLoad = parsedSettings.stt.whisperModel;
+          }
+          if (parsedSettings.stt && parsedSettings.stt.enableDiarization !== undefined) {
+            enableDiarization = parsedSettings.stt.enableDiarization;
           }
         } catch (e) {
           console.error("Failed to parse settings for starting transcription:", e);
@@ -369,7 +373,7 @@ export const useTranscription = () => {
       }
       
       console.log(`Attempting to load model by name: ${whisperModelNameToLoad || 'default'}. Current modelReady: ${modelReady}`);
-      const loaded = await handleLoadModel(whisperModelNameToLoad);
+      const loaded = await handleLoadModel(whisperModelNameToLoad, enableDiarization);
       if (!loaded) {
         console.log('Failed to load transcription model. Cannot start transcription.');
         return;

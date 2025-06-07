@@ -36,7 +36,7 @@ const initializeWorker = () => {
 
             let outputText = output.trim();
 
-            if (lastSpeakerId !== speaker_id) {
+            if (speaker_id && lastSpeakerId !== speaker_id) {
               outputText = `\nSPEAKER_${speaker_id}: ${outputText}`;
               lastSpeakerId = speaker_id;
             }
@@ -88,14 +88,14 @@ const initializeWorker = () => {
   }
 };
 
-export const loadModel = async (progressCb, modelName = null) => { // Changed modelName to modelSlug
+export const loadModel = async (progressCb, modelName = null, enableDiarization) => { // Changed modelName to modelSlug
   initializeWorker();
   onLoadProgressCallback = progressCb;
 
   if (modelName) {
     console.log(`transcriptionService: loadModel called for specific model name: ${modelName}`);
     modelState = 'loading';
-    worker.postMessage({ type: 'load', data: { modelName } });
+    worker.postMessage({ type: 'load', data: { modelName, enableDiarization } });
   } else {
     // If no specific modelSlug, check current state
     if (modelState === 'ready') {
