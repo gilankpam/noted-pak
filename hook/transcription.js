@@ -466,7 +466,7 @@ export const useTranscription = () => {
 
       // Pass the current state of isMicMuted to setupVAD.
       // If screen share, it's true. If mic-only, it's false.
-      const vadSetupSuccess = await setupVAD(isMicMuted);
+      const vadSetupSuccess = await setupVAD(streamSourceType !== 'mic');
       if (!vadSetupSuccess) {
           console.error("VAD setup failed during start transcription.");
           handleStopTranscription();
