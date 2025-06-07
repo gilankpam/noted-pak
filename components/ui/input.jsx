@@ -12,7 +12,6 @@ const Input = React.forwardRef(({ className, type, ...props }, ref) => {
       )}
       ref={ref}
       {...props}
-      data-oid="epq.zk3"
     />
   );
 });
