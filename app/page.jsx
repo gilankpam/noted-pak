@@ -457,8 +457,8 @@ export default function Page() {
                       data-oid="q_u.x6v"
                     >
                       {isSummarizing && summarizationState === "thinking"
-                        ? "Thinking..." : "Loading summarization model..."
-                      }
+                        ? "Thinking..."
+                        : "Loading summarization model..."}
                     </p>
                     {isSummarizing && summarizationState === "thinking" && (
                       <p

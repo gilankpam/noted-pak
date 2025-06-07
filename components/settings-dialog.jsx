@@ -159,7 +159,7 @@ export function SettingsDialog() {
 
   const localModels = [
     { value: "qwen3-0.6b", label: "Qwen3 0.6B" },
-    { value: "smollm2-1.7b", label: "SmolLM2 1.7B" }
+    { value: "smollm2-1.7b", label: "SmolLM2 1.7B" },
   ];
 
   const updateSTTSettings = (field, value) => {
@@ -222,42 +222,63 @@ export function SettingsDialog() {
   };
 
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger asChild>
-        <Button variant="outline" size="icon" className="ml-auto">
-          <Settings className="h-4 w-4" />
-          <span className="sr-only">Open settings</span>
+    <Dialog open={open} onOpenChange={setOpen} data-oid="krsis:v">
+      <DialogTrigger asChild data-oid="9dangs3">
+        <Button
+          variant="outline"
+          size="icon"
+          className="ml-auto"
+          data-oid="h435x6o"
+        >
+          <Settings className="h-4 w-4" data-oid="q2owkiq" />
+          <span className="sr-only" data-oid="va39iwh">
+            Open settings
+          </span>
         </Button>
       </DialogTrigger>
-      <DialogContent className="sm:max-w-[600px]">
-        <DialogHeader>
-          <DialogTitle>Settings</DialogTitle>
-          <DialogDescription>
+      <DialogContent className="sm:max-w-[600px]" data-oid="hl.z90r">
+        <DialogHeader data-oid="e9krof-">
+          <DialogTitle data-oid="y47ywgb">Settings</DialogTitle>
+          <DialogDescription data-oid="qwp.6zm">
             Configure your speech-to-text and language model settings.
           </DialogDescription>
         </DialogHeader>
 
-        <Tabs defaultValue="stt" className="w-full">
-          <TabsList className="grid w-full grid-cols-2">
-            <TabsTrigger value="stt">Speech-to-Text</TabsTrigger>
-            <TabsTrigger value="llm">Language Model</TabsTrigger>
+        <Tabs defaultValue="stt" className="w-full" data-oid="gxk0agr">
+          <TabsList className="grid w-full grid-cols-2" data-oid="smksn2q">
+            <TabsTrigger value="stt" data-oid="aq1tsyp">
+              Speech-to-Text
+            </TabsTrigger>
+            <TabsTrigger value="llm" data-oid="_rtsw37">
+              Language Model
+            </TabsTrigger>
           </TabsList>
 
-          <TabsContent value="stt" className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="whisper-model">Whisper Model</Label>
+          <TabsContent value="stt" className="space-y-4" data-oid="d33ow-d">
+            <div className="space-y-2" data-oid="ewsgz8.">
+              <Label htmlFor="whisper-model" data-oid=":5:q55y">
+                Whisper Model
+              </Label>
               <Select
                 value={settings.stt.whisperModel}
                 onValueChange={(value) =>
                   updateSTTSettings("whisperModel", value)
                 }
+                data-oid="4_-v_m1"
               >
-                <SelectTrigger id="whisper-model">
-                  <SelectValue placeholder="Select a Whisper model" />
+                <SelectTrigger id="whisper-model" data-oid="60_cj1d">
+                  <SelectValue
+                    placeholder="Select a Whisper model"
+                    data-oid="sytz5qp"
+                  />
                 </SelectTrigger>
-                <SelectContent>
+                <SelectContent data-oid="jtpy9vt">
                   {whisperModels.map((model) => (
-                    <SelectItem key={model.value} value={model.value}>
+                    <SelectItem
+                      key={model.value}
+                      value={model.value}
+                      data-oid="t.k31lh"
+                    >
                       {model.label}
                     </SelectItem>
                   ))}
@@ -266,19 +287,21 @@ export function SettingsDialog() {
             </div>
           </TabsContent>
 
-          <TabsContent value="llm" className="space-y-4">
-            <div className="space-y-4">
-              <Label>Model Type</Label>
+          <TabsContent value="llm" className="space-y-4" data-oid="gimnth6">
+            <div className="space-y-4" data-oid="jv-hk73">
+              <Label data-oid="mlqgrqp">Model Type</Label>
               <RadioGroup
                 value={settings.llm.type}
                 onValueChange={(value) => updateLLMSettings("type", value)}
                 className="flex flex-col space-y-3"
+                data-oid=".pw3-di"
               >
-                <div className="flex items-center space-x-2">
+                <div className="flex items-center space-x-2" data-oid="t-wfhnt">
                   <RadioGroupItem
                     value="local"
                     id="local"
                     disabled={!isWebGPUSupported && isWebGPUCheckComplete}
+                    data-oid="nk54zra"
                   />
 
                   <Label
@@ -288,12 +311,16 @@ export function SettingsDialog() {
                         ? "text-muted-foreground"
                         : ""
                     }
+                    data-oid="lwm8xm:"
                   >
                     Local Model
                   </Label>
                 </div>
                 {isWebGPUCheckComplete && !isWebGPUSupported && (
-                  <p className="ml-6 text-sm text-destructive">
+                  <p
+                    className="ml-6 text-sm text-destructive"
+                    data-oid="lfs16nu"
+                  >
                     {webGPUCheckMessage ||
                       "Local model disabled due to WebGPU unavailability."}
                   </p>
@@ -302,21 +329,31 @@ export function SettingsDialog() {
                 {settings.llm.type === "local" &&
                   isWebGPUSupported &&
                   isWebGPUCheckComplete && (
-                    <div className="ml-6 space-y-2">
-                      <Label htmlFor="local-model">Select Local Model</Label>
+                    <div className="ml-6 space-y-2" data-oid="8ov39o1">
+                      <Label htmlFor="local-model" data-oid="yyojj_g">
+                        Select Local Model
+                      </Label>
                       <Select
                         value={settings.llm.localModel}
                         onValueChange={(value) =>
                           updateLLMSettings("localModel", value)
                         }
                         disabled={!isWebGPUSupported} // Double ensure disabled
+                        data-oid="gdfx-:l"
                       >
-                        <SelectTrigger id="local-model">
-                          <SelectValue placeholder="Select a local model" />
+                        <SelectTrigger id="local-model" data-oid="s3ng0mj">
+                          <SelectValue
+                            placeholder="Select a local model"
+                            data-oid="wis8xk9"
+                          />
                         </SelectTrigger>
-                        <SelectContent>
+                        <SelectContent data-oid="kvg-1v:">
                           {localModels.map((model) => (
-                            <SelectItem key={model.value} value={model.value}>
+                            <SelectItem
+                              key={model.value}
+                              value={model.value}
+                              data-oid="w4pbb8i"
+                            >
                               {model.label}
                             </SelectItem>
                           ))}
@@ -328,23 +365,34 @@ export function SettingsDialog() {
                 {settings.llm.type === "local" &&
                   !isWebGPUSupported &&
                   isWebGPUCheckComplete && (
-                    <div className="ml-6 space-y-2">
-                      <p className="text-sm text-muted-foreground">
+                    <div className="ml-6 space-y-2" data-oid="fgmp11-">
+                      <p
+                        className="text-sm text-muted-foreground"
+                        data-oid="92hty48"
+                      >
                         Local model selection is unavailable.
                       </p>
                     </div>
                   )}
 
-                <div className="flex items-center space-x-2">
-                  <RadioGroupItem value="openai" id="openai" />
+                <div className="flex items-center space-x-2" data-oid="0s9fidz">
+                  <RadioGroupItem
+                    value="openai"
+                    id="openai"
+                    data-oid="e-p6-h7"
+                  />
 
-                  <Label htmlFor="openai">OpenAI Model</Label>
+                  <Label htmlFor="openai" data-oid="rn2oaz.">
+                    OpenAI Model
+                  </Label>
                 </div>
 
                 {settings.llm.type === "openai" && (
-                  <div className="ml-6 space-y-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="api-token">API Token</Label>
+                  <div className="ml-6 space-y-4" data-oid="en_ugjj">
+                    <div className="space-y-2" data-oid="vefl60v">
+                      <Label htmlFor="api-token" data-oid="_neouq.">
+                        API Token
+                      </Label>
                       <Input
                         id="api-token"
                         type="password"
@@ -353,11 +401,14 @@ export function SettingsDialog() {
                         onChange={(e) =>
                           updateOpenAISettings("apiToken", e.target.value)
                         }
+                        data-oid="b1oc1qz"
                       />
                     </div>
 
-                    <div className="space-y-2">
-                      <Label htmlFor="base-url">Base URL</Label>
+                    <div className="space-y-2" data-oid="11oc:p9">
+                      <Label htmlFor="base-url" data-oid="auc_vet">
+                        Base URL
+                      </Label>
                       <Input
                         id="base-url"
                         placeholder="https://api.openai.com/v1"
@@ -365,11 +416,14 @@ export function SettingsDialog() {
                         onChange={(e) =>
                           updateOpenAISettings("baseUrl", e.target.value)
                         }
+                        data-oid="jpzhytq"
                       />
                     </div>
 
-                    <div className="space-y-2">
-                      <Label htmlFor="model-name">Model Name</Label>
+                    <div className="space-y-2" data-oid="pzm8o-m">
+                      <Label htmlFor="model-name" data-oid="jyxjfu4">
+                        Model Name
+                      </Label>
                       <Input
                         id="model-name"
                         placeholder="gpt-4"
@@ -377,6 +431,7 @@ export function SettingsDialog() {
                         onChange={(e) =>
                           updateOpenAISettings("modelName", e.target.value)
                         }
+                        data-oid="sz259qg"
                       />
                     </div>
                   </div>
@@ -386,11 +441,13 @@ export function SettingsDialog() {
           </TabsContent>
         </Tabs>
 
-        <div className="flex justify-end space-x-2 pt-4">
-          <Button variant="outline" onClick={handleCancel}>
+        <div className="flex justify-end space-x-2 pt-4" data-oid="w2fk-7y">
+          <Button variant="outline" onClick={handleCancel} data-oid=":nk33i_">
             Cancel
           </Button>
-          <Button onClick={handleSave}>Save Settings</Button>
+          <Button onClick={handleSave} data-oid="i0r__1o">
+            Save Settings
+          </Button>
         </div>
       </DialogContent>
     </Dialog>
