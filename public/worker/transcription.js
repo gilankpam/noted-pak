@@ -41,9 +41,7 @@ const whisperModelOptions = {
   },
   whisper_distil_small: {
     model_id: 'distil-whisper/distil-small.en',
-    params: {
-      model_file_name: 'encoder_model_quantized'
-    }
+    params: {}
   }
 }
 
