@@ -1,8 +1,10 @@
 import {
   AutoTokenizer,
   AutoProcessor,
+  AutoModel,
   WhisperForConditionalGeneration,
   TextStreamer,
+  cos_sim,
   env
 } from "@huggingface/transformers";
 
@@ -89,7 +91,47 @@ class AutomaticSpeechRecognitionPipeline {
   }
 }
 
+class SpeakerVerificationPipeline {
+  static model_id = "Xenova/wavlm-base-plus-sv";
+  static model = null;
+  static processor = null;
+
+  static async getInstance() {
+    if (!this.processor) {
+      this.processor = await AutoProcessor.from_pretrained(this.model_id, {
+            device: 'wasm',
+            dtype: 'fp32',
+            // model_file_name: 'model_quantized',
+            progress_callback: x => console.log(x)
+        });
+    }
+    if (!this.model) {
+      this.model = await AutoModel.from_pretrained(this.model_id, {
+            device: 'wasm',
+            dtype: 'fp32',
+            // model_file_name: 'model_quantized',
+            progress_callback: x => console.log(x)
+        });
+    }
+
+    return [this.processor, this.model];
+  }
+}
+
 let processing = false;
+let speakerEmbeddings = [];
+
+function getSpeakerId(embeddings) {
+  if (speakerEmbeddings.length === 0) {
+    speakerEmbeddings.push(embeddings);
+    return 0;
+  }
+
+  // Loop through existing speakerEmbeddings
+  for (const e of speakerEmbeddings) {
+    console.log(cos_sim(e, embeddings));
+  }
+}
 
 async function generate({ audio, language = 'en'}) {
   if (processing) {
@@ -126,6 +168,14 @@ async function generate({ audio, language = 'en'}) {
       streamer
     });
 
+    // Get speaker verification
+    const [verificationProcessor, verificationModel] = await SpeakerVerificationPipeline.getInstance();
+    // Get the first 2 second
+    const verificationInputs = await verificationProcessor(audio.slice(0, 2 * 16000));
+    const { embeddings } = await verificationModel(verificationInputs);
+
+    getSpeakerId(embeddings.data);
+
     self.postMessage({
       status: "complete"
     });
@@ -158,6 +208,12 @@ async function load({ modelName } = null) {
       input_features: dummyProcessed.input_features, // Use processed dummy audio
       max_new_tokens: 1, // Generate only one token for warmup
     });
+
+    // Load speaker verification
+    const [verificationProcessor, verificationModel] = await SpeakerVerificationPipeline.getInstance(); 
+    const verificationInputs = await verificationProcessor(new Float32Array(16000 * 1));
+    await verificationModel(verificationInputs)
+
     self.postMessage({ status: "ready" });
   } catch (error) {
     self.postMessage({ status: "error", error: `Model load/warmup failed: ${error.message}`, stack: error.stack });
