@@ -35,9 +35,18 @@ export function SettingsDialog() {
   const whisperModels = [
     { value: "whisper_base_q4", label: "Whisper Base q4 (Lightest) (143 MB)" },
     { value: "whisper_base_f32", label: "Whisper Base f32 (Light) (291 MB)" },
-    { value: "whisper_distil_small", label: "Whisper Distil Small (Heavy) (665 MB)" },
-    { value: "whisper_small_q4", label: "Whisper Small q4 (Heaviest) (295 MB)" },
-    { value: "whisper_distil_medium", label: "Whisper Distil Medium (Heavy) (1.6 GB)" },
+    {
+      value: "whisper_distil_small",
+      label: "Whisper Distil Small (Heavy) (665 MB)",
+    },
+    {
+      value: "whisper_small_q4",
+      label: "Whisper Small q4 (Heaviest) (295 MB)",
+    },
+    {
+      value: "whisper_distil_medium",
+      label: "Whisper Distil Medium (Heavy) (1.6 GB)",
+    },
   ];
 
   const initialSettings = {
@@ -227,42 +236,63 @@ export function SettingsDialog() {
   };
 
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger asChild>
-        <Button variant="outline" size="icon" className="ml-auto">
-          <Settings className="h-4 w-4" />
-          <span className="sr-only">Open settings</span>
+    <Dialog open={open} onOpenChange={setOpen} data-oid="kq74pp5">
+      <DialogTrigger asChild data-oid="jlxtf__">
+        <Button
+          variant="outline"
+          size="icon"
+          className="ml-auto"
+          data-oid="vmtn_3g"
+        >
+          <Settings className="h-4 w-4" data-oid="5ko:5r1" />
+          <span className="sr-only" data-oid="f.pctjo">
+            Open settings
+          </span>
         </Button>
       </DialogTrigger>
-      <DialogContent className="sm:max-w-[600px]">
-        <DialogHeader>
-          <DialogTitle>Settings</DialogTitle>
-          <DialogDescription>
+      <DialogContent className="sm:max-w-[600px]" data-oid="i2x4_w2">
+        <DialogHeader data-oid="s:tjasw">
+          <DialogTitle data-oid="-c6eew2">Settings</DialogTitle>
+          <DialogDescription data-oid="lmigg8-">
             Configure your speech-to-text and language model settings.
           </DialogDescription>
         </DialogHeader>
 
-        <Tabs defaultValue="stt" className="w-full">
-          <TabsList className="grid w-full grid-cols-2">
-            <TabsTrigger value="stt">Speech-to-Text</TabsTrigger>
-            <TabsTrigger value="llm">Language Model</TabsTrigger>
+        <Tabs defaultValue="stt" className="w-full" data-oid="vgm:v8m">
+          <TabsList className="grid w-full grid-cols-2" data-oid="jy-kp7h">
+            <TabsTrigger value="stt" data-oid="mdel0p2">
+              Speech-to-Text
+            </TabsTrigger>
+            <TabsTrigger value="llm" data-oid="p3w.b3q">
+              Language Model
+            </TabsTrigger>
           </TabsList>
 
-          <TabsContent value="stt" className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="whisper-model">Whisper Model</Label>
+          <TabsContent value="stt" className="space-y-4" data-oid="jsdvw_e">
+            <div className="space-y-2" data-oid="cjfr.4:">
+              <Label htmlFor="whisper-model" data-oid="hesx7ln">
+                Whisper Model
+              </Label>
               <Select
                 value={settings.stt.whisperModel}
                 onValueChange={(value) =>
                   updateSTTSettings("whisperModel", value)
                 }
+                data-oid="oqoza50"
               >
-                <SelectTrigger id="whisper-model">
-                  <SelectValue placeholder="Select a Whisper model" />
+                <SelectTrigger id="whisper-model" data-oid="2kaw2g8">
+                  <SelectValue
+                    placeholder="Select a Whisper model"
+                    data-oid="3eadizc"
+                  />
                 </SelectTrigger>
-                <SelectContent>
+                <SelectContent data-oid="985oa6-">
                   {whisperModels.map((model) => (
-                    <SelectItem key={model.value} value={model.value}>
+                    <SelectItem
+                      key={model.value}
+                      value={model.value}
+                      data-oid="d18tnus"
+                    >
                       {model.label}
                     </SelectItem>
                   ))}
@@ -270,25 +300,29 @@ export function SettingsDialog() {
               </Select>
             </div>
 
-            <div className="space-y-3">
-              <div className="flex items-center space-x-2">
+            <div className="space-y-3" data-oid=".wt0a_5">
+              <div className="flex items-center space-x-2" data-oid="m0dtm4b">
                 <Checkbox
                   id="enable-diarization"
                   checked={settings.stt.enableDiarization}
                   onCheckedChange={(checked) =>
                     updateSTTSettings("enableDiarization", checked)
                   }
+                  data-oid="5pdkhww"
                 />
 
-                <Label htmlFor="enable-diarization">
+                <Label htmlFor="enable-diarization" data-oid="thrwpje">
                   Enable Speaker Diarization
                 </Label>
               </div>
-              <div className="ml-6 space-y-1">
-                <p className="text-sm text-amber-600 dark:text-amber-400">
+              <div className="ml-6 space-y-1" data-oid="adr4is7">
+                <p
+                  className="text-sm text-amber-600 dark:text-amber-400"
+                  data-oid="ltlau63"
+                >
                   ⚠️ Diarization is experimental and may not be reliable
                 </p>
-                <p className="text-sm text-muted-foreground">
+                <p className="text-sm text-muted-foreground" data-oid="wk:.ylc">
                   Uses significantly more computational resources and processing
                   time
                 </p>
@@ -296,19 +330,21 @@ export function SettingsDialog() {
             </div>
           </TabsContent>
 
-          <TabsContent value="llm" className="space-y-4">
-            <div className="space-y-4">
-              <Label>Model Type</Label>
+          <TabsContent value="llm" className="space-y-4" data-oid="rsuy5w:">
+            <div className="space-y-4" data-oid="pot1rzr">
+              <Label data-oid="he_dm9g">Model Type</Label>
               <RadioGroup
                 value={settings.llm.type}
                 onValueChange={(value) => updateLLMSettings("type", value)}
                 className="flex flex-col space-y-3"
+                data-oid="3o.4p_1"
               >
-                <div className="flex items-center space-x-2">
+                <div className="flex items-center space-x-2" data-oid="0miy:0b">
                   <RadioGroupItem
                     value="local"
                     id="local"
                     disabled={!isWebGPUSupported && isWebGPUCheckComplete}
+                    data-oid="w04f6qc"
                   />
 
                   <Label
@@ -318,12 +354,16 @@ export function SettingsDialog() {
                         ? "text-muted-foreground"
                         : ""
                     }
+                    data-oid="_4zt:uv"
                   >
                     Local Model
                   </Label>
                 </div>
                 {isWebGPUCheckComplete && !isWebGPUSupported && (
-                  <p className="ml-6 text-sm text-destructive">
+                  <p
+                    className="ml-6 text-sm text-destructive"
+                    data-oid="0ca2pzo"
+                  >
                     {webGPUCheckMessage ||
                       "Local model disabled due to WebGPU unavailability."}
                   </p>
@@ -332,21 +372,31 @@ export function SettingsDialog() {
                 {settings.llm.type === "local" &&
                   isWebGPUSupported &&
                   isWebGPUCheckComplete && (
-                    <div className="ml-6 space-y-2">
-                      <Label htmlFor="local-model">Select Local Model</Label>
+                    <div className="ml-6 space-y-2" data-oid="x1wf10s">
+                      <Label htmlFor="local-model" data-oid="727mxut">
+                        Select Local Model
+                      </Label>
                       <Select
                         value={settings.llm.localModel}
                         onValueChange={(value) =>
                           updateLLMSettings("localModel", value)
                         }
                         disabled={!isWebGPUSupported} // Double ensure disabled
+                        data-oid=":u62set"
                       >
-                        <SelectTrigger id="local-model">
-                          <SelectValue placeholder="Select a local model" />
+                        <SelectTrigger id="local-model" data-oid="onua5fu">
+                          <SelectValue
+                            placeholder="Select a local model"
+                            data-oid="z.4h6x4"
+                          />
                         </SelectTrigger>
-                        <SelectContent>
+                        <SelectContent data-oid="tvtg90x">
                           {localModels.map((model) => (
-                            <SelectItem key={model.value} value={model.value}>
+                            <SelectItem
+                              key={model.value}
+                              value={model.value}
+                              data-oid="0xh84y0"
+                            >
                               {model.label}
                             </SelectItem>
                           ))}
@@ -358,23 +408,34 @@ export function SettingsDialog() {
                 {settings.llm.type === "local" &&
                   !isWebGPUSupported &&
                   isWebGPUCheckComplete && (
-                    <div className="ml-6 space-y-2">
-                      <p className="text-sm text-muted-foreground">
+                    <div className="ml-6 space-y-2" data-oid="78unqu_">
+                      <p
+                        className="text-sm text-muted-foreground"
+                        data-oid="fz6fvn0"
+                      >
                         Local model selection is unavailable.
                       </p>
                     </div>
                   )}
 
-                <div className="flex items-center space-x-2">
-                  <RadioGroupItem value="openai" id="openai" />
+                <div className="flex items-center space-x-2" data-oid=":f91oo7">
+                  <RadioGroupItem
+                    value="openai"
+                    id="openai"
+                    data-oid="mrvqd94"
+                  />
 
-                  <Label htmlFor="openai">OpenAI Model</Label>
+                  <Label htmlFor="openai" data-oid="kt2dqnf">
+                    OpenAI Model
+                  </Label>
                 </div>
 
                 {settings.llm.type === "openai" && (
-                  <div className="ml-6 space-y-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="api-token">API Token</Label>
+                  <div className="ml-6 space-y-4" data-oid="oadtcpr">
+                    <div className="space-y-2" data-oid="y._.9yn">
+                      <Label htmlFor="api-token" data-oid="44bowuy">
+                        API Token
+                      </Label>
                       <Input
                         id="api-token"
                         type="password"
@@ -383,11 +444,14 @@ export function SettingsDialog() {
                         onChange={(e) =>
                           updateOpenAISettings("apiToken", e.target.value)
                         }
+                        data-oid="s_3h76."
                       />
                     </div>
 
-                    <div className="space-y-2">
-                      <Label htmlFor="base-url">Base URL</Label>
+                    <div className="space-y-2" data-oid="_ies.xz">
+                      <Label htmlFor="base-url" data-oid="pmghz0b">
+                        Base URL
+                      </Label>
                       <Input
                         id="base-url"
                         placeholder="https://api.openai.com/v1"
@@ -395,11 +459,14 @@ export function SettingsDialog() {
                         onChange={(e) =>
                           updateOpenAISettings("baseUrl", e.target.value)
                         }
+                        data-oid="bu23ul:"
                       />
                     </div>
 
-                    <div className="space-y-2">
-                      <Label htmlFor="model-name">Model Name</Label>
+                    <div className="space-y-2" data-oid=":962mp_">
+                      <Label htmlFor="model-name" data-oid="9bm8mlv">
+                        Model Name
+                      </Label>
                       <Input
                         id="model-name"
                         placeholder="gpt-4"
@@ -407,6 +474,7 @@ export function SettingsDialog() {
                         onChange={(e) =>
                           updateOpenAISettings("modelName", e.target.value)
                         }
+                        data-oid="l104pi5"
                       />
                     </div>
                   </div>
@@ -416,11 +484,13 @@ export function SettingsDialog() {
           </TabsContent>
         </Tabs>
 
-        <div className="flex justify-end space-x-2 pt-4">
-          <Button variant="outline" onClick={handleCancel}>
+        <div className="flex justify-end space-x-2 pt-4" data-oid="yfss21n">
+          <Button variant="outline" onClick={handleCancel} data-oid="e3.y5ip">
             Cancel
           </Button>
-          <Button onClick={handleSave}>Save Settings</Button>
+          <Button onClick={handleSave} data-oid=".er5wfb">
+            Save Settings
+          </Button>
         </div>
       </DialogContent>
     </Dialog>
