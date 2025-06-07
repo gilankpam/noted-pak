@@ -36,7 +36,7 @@ const initializeWorker = () => {
 
             let outputText = output.trim();
 
-            if (speaker_id && lastSpeakerId !== speaker_id) {
+            if (speaker_id !== null && lastSpeakerId !== speaker_id) {
               outputText = `\nSPEAKER_${speaker_id}: ${outputText}`;
               lastSpeakerId = speaker_id;
             }
