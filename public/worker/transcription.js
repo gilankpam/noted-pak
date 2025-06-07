@@ -63,7 +63,6 @@ class AutomaticSpeechRecognitionPipeline {
     const model_id = selectedModelConfig.model_id;
     console.log(`Loading resources for ${model_id} with params:`, selectedModelConfig.params);
 
-    // Ensure components are loaded sequentially or awaited properly
     this.tokenizer = await AutoTokenizer.from_pretrained(model_id, {
       progress_callback,
     });
@@ -86,7 +85,9 @@ class AutomaticSpeechRecognitionPipeline {
   static async unloadModel() {
     this.tokenizer = null;
     this.processor = null;
-    await this.model.dispose();
+    if (this.model) {
+      await this.model.dispose();
+    }
     this.model = null;
   }
 }
@@ -117,7 +118,9 @@ class SpeakerVerificationPipeline {
 
   static async unloadModel() {
     this.processor = null;
-    await this.model.dispose();
+    if (this.model) {
+      await this.model.dispose();
+    }
     this.model = null;
   }
 }
@@ -263,10 +266,10 @@ async function load({ modelName } = null) {
 }
 
 async function unload() {
-  await SpeakerVerificationPipeline.unloadModel();
-  await AutomaticSpeechRecognitionPipeline.unloadModel();
   audioQueue = [];
   speakerEmbeddings = [];
+  await SpeakerVerificationPipeline.unloadModel();
+  await AutomaticSpeechRecognitionPipeline.unloadModel();
 }
 
 self.addEventListener("message", async (e) => {
