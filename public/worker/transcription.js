@@ -114,6 +114,12 @@ class SpeakerVerificationPipeline {
 
     return [this.processor, this.model];
   }
+
+  static async unloadModel() {
+    this.processor = null;
+    await this.model.dispose();
+    this.model = null;
+  }
 }
 
 let processing = false;
@@ -257,7 +263,10 @@ async function load({ modelName } = null) {
 }
 
 async function unload() {
+  await SpeakerVerificationPipeline.unloadModel();
   await AutomaticSpeechRecognitionPipeline.unloadModel();
+  audioQueue = [];
+  speakerEmbeddings = [];
 }
 
 self.addEventListener("message", async (e) => {
