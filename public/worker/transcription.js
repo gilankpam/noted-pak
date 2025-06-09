@@ -76,7 +76,6 @@ class AutomaticSpeechRecognitionPipeline {
     this.currentModel = selectedModelConfig.name;
 
     const model_id = selectedModelConfig.model_id;
-    console.log(`Loading resources for ${model_id} with params:`, selectedModelConfig.params);
 
     this.tokenizer = await AutoTokenizer.from_pretrained(model_id, {
       progress_callback,
@@ -92,7 +91,6 @@ class AutomaticSpeechRecognitionPipeline {
         progress_callback,
       }
     );
-    console.log("Model loaded successfully:", model_id);
     this.currentModel = modelName;
     return [this.tokenizer, this.processor, this.model];
   }
@@ -235,12 +233,6 @@ async function processAudioQueue() {
       language: AutomaticSpeechRecognitionPipeline.currentModel.includes('distil') ? undefined : language || "en",
       streamer
     });
-
-    self.postMessage({
-      status: "complete",
-      speaker_id
-    });
-
   } catch (error) {
     self.postMessage({ status: "error", error: error.message, stack: error.stack });
   } finally {
@@ -253,19 +245,10 @@ async function processAudioQueue() {
 }
 
 async function load({ modelName, enableDiarization } = null) {
-  self.postMessage({
-    status: "loading"
-  });
-
   try {
     const [, processor, model] = 
       await AutomaticSpeechRecognitionPipeline.loadModel(x => self.postMessage(x), modelName)
 
-    self.postMessage({
-      status: "loading",
-      data: "Compiling shaders and warming up model...",
-    });
-    
     const dummyAudio = new Float32Array(16000 * 1); // 1 second of silence for warmup
     const dummyProcessed = await processor(dummyAudio, { sampling_rate: 16000 });
 

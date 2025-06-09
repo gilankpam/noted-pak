@@ -65,13 +65,7 @@ export default function Page() {
       return;
     await handleStartSummarization(editableTranscription, meetingTitle);
   };
-
-  useEffect(() => {
-    if (modelLoadingProgress) {
-      console.log(`Model Loading Progress: ${modelLoadingProgress}`);
-    }
-  }, [modelLoadingProgress]);
-
+  
   useEffect(() => {
     setEditableTranscription(transcription);
   }, [transcription]);
@@ -257,7 +251,7 @@ export default function Page() {
                 ></div>
                 <span className="text-sm text-gray-600 dark:text-gray-400">
                   {isStarting
-                    ? "Loading model..."
+                    ? modelLoadingProgress || "Loading model..."
                     : isTranscribing
                       ? isTranscriptionPaused
                         ? `Recording Paused (Mic: ${isMicMuted ? "Muted" : "On"})`
